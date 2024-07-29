@@ -27,13 +27,11 @@ class _LoginPageState extends State<LoginPage> {
     bool rememberMe = prefs.getBool('rememberMe') ?? false;
     if (rememberMe) {
       String? email = prefs.getString('email');
-      if (email != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => UserPage(email: email)),
-        );
-      }
-    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => UserPage(email: email)),
+      );
+        } else {
       _loadSavedCredentials();
     }
   }

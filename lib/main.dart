@@ -38,10 +38,8 @@ Future<Widget> getInitialPage() async {
   bool rememberMe = prefs.getBool('rememberMe') ?? false;
   if (rememberMe) {
     String? email = prefs.getString('email');
-    if (email != null) {
-      return UserPage(email: email);
+    return UserPage(email: email);
     }
-  }
   return MyHomePage();
 }
 
