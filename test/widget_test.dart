@@ -1,31 +1,24 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:etqab/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-
+import '../lib/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('HomePage displays correctly', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(MyApp(homePage: MyHomePage()));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Verify that specific widgets are displayed. Adjust the following lines based on actual widgets in MyHomePage.
+    expect(find.text('Hello, Guest'), findsOneWidget);
+    expect(find.byIcon(Icons.login), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    // Tap a specific widget if necessary (adjust the selector and action according to your widget structure)
+    await tester.tap(find.byIcon(Icons.login));
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify results after interaction (this depends on what you expect to happen)
+    // Adjust the following lines based on expected changes.
+    // Example: Check if a new widget is displayed after the tap.
+    // expect(find.text('New Widget Text'), findsOneWidget);
   });
 }

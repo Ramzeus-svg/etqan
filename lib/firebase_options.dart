@@ -90,4 +90,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'etqan-center.appspot.com',
     measurementId: 'G-6Q0S8GEG96',
   );
+
 }

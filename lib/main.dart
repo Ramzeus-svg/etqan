@@ -2,20 +2,59 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'login_page.dart';
+import 'admin_page.dart';
+import 'register_page.dart';
+import 'tour_page.dart';
+import 'about_page.dart';
+import 'user_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(const MyApp());
+
+  // Initialize Firebase only once
+  await Firebase.initializeApp(
+    options: FirebaseOptions(
+      apiKey: "AIzaSyA9xV4MuX4_HIkNCRWy2dNOgRRfDPa8cw0",
+      authDomain: "etqan-center.firebaseapp.com",
+      databaseURL: "https://etqan-center-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "etqan-center",
+      storageBucket: "etqan-center.appspot.com",
+      messagingSenderId: "277429609000",
+      appId: "1:277429609000:web:907d2bd40e028c7e104b1d",
+      measurementId: "G-3HVEVDW1J3",
+    ),
+  );
+
+  final initialPage = await getInitialPage();
+
+  runApp(MyApp(homePage: initialPage));
+}
+
+Future<Widget> getInitialPage() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  bool rememberMe = prefs.getBool('rememberMe') ?? false;
+  if (rememberMe) {
+    String? email = prefs.getString('email');
+    if (email != null) {
+      return UserPage(email: email);
+    }
+  }
+  return MyHomePage();
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final Widget homePage;
+
+  const MyApp({super.key, required this.homePage});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: MyHomePage(),
+    return MaterialApp(
+      home: homePage,
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -71,12 +110,32 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 if (passwordController.text == '1414') {
                   Navigator.of(context).pop();
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminPage()));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => AdminPage()));
                 } else {
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Incorrect password')));
                 }
               },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void showContentDialog(String name, String content) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(name),
+          content: SingleChildScrollView(
+            child: Text(content),
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Close'),
+              onPressed: () => Navigator.of(context).pop(),
             ),
           ],
         );
@@ -99,75 +158,95 @@ class _MyHomePageState extends State<MyHomePage> {
             fit: BoxFit.fill,
           ),
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            children: <Widget>[
-              Container(
-                margin: const EdgeInsets.only(top: 1.0, left: 10.0),
-                child: const Text(
-                  'Hello, Guest',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'sans-serif-black',
-                    fontSize: 20.0,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: Column(
+                children: <Widget>[
+                  Container(
+                    margin: const EdgeInsets.only(top: 1.0, left: 10.0),
+                    child: const Text(
+                      'Hello, Guest',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontFamily: 'sans-serif-black',
+                        fontSize: 20.0,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              SizedBox(
-                height: MediaQuery.of(context).size.height - 60.0,
-                child: Column(
-                  children: <Widget>[
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: <Widget>[
-                          buildCard(context, 'assets/login.png', 'Login', const LoginPage()),
-                          buildCard(context, 'assets/tour.png', 'Tour', const TourPage()),
-                          buildCard(context, 'assets/register.png', 'Register', const RegisterPage()),
-                          buildCard(context, 'assets/admin.png', 'Admin', showPasswordDialog),
-                          buildCard(context, 'assets/etqan.png', 'About', const AboutPage()),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.only(top: 40.0, left: 0.0),
-                      child: const Text(
-                        'Announcements',
-                        style: TextStyle(
-                          color: Color(0xFF020255),
-                          fontSize: 20.0,
+                  SizedBox(
+                    height: constraints.maxHeight - 30.0,
+                    child: Column(
+                      children: <Widget>[
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: <Widget>[
+                              buildCard(context, Icons.login, 'Login', LoginPage()),
+                              buildCard(context, Icons.tour, 'Tour', TourPage()),
+                              buildCard(context, Icons.app_registration, 'Register', RegisterPage()),
+                              buildCard(context, Icons.admin_panel_settings, 'Admin', showPasswordDialog),
+                              buildCard(context, Icons.info, 'About', AboutPage()),
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
-                    Expanded(
-                      child: ListView.builder(
-                        padding: const EdgeInsets.only(top: 20.0),
-                        itemCount: items.length,
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            title: Text(
-                              items[index].name,
-                              style: const TextStyle(fontSize: 24),
+                        Container(
+                          margin: const EdgeInsets.only(top: 20.0, left: 0.0),
+                          child: const Text(
+                            'Announcements',
+                            style: TextStyle(
+                              color: Color(0xFF020255),
+                              fontSize: 20.0,
                             ),
-                            subtitle: Text(
-                              items[index].content,
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                          );
-                        },
-                      ),
+                          ),
+                        ),
+                        Expanded(
+                          child: ListView.builder(
+                            padding: const EdgeInsets.only(top: 20.0),
+                            itemCount: items.length,
+                            itemBuilder: (context, index) {
+                              return Card(
+                                margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                                elevation: 5.0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.all(16.0),
+                                  title: Text(
+                                    items[index].name,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    items[index].content.length > 100
+                                        ? '${items[index].content.substring(0, 100)}...'
+                                        : items[index].content,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  onTap: () {
+                                    showContentDialog(items[index].name, items[index].content);
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget buildCard(BuildContext context, String imagePath, String text, dynamic page) {
+  Widget buildCard(BuildContext context, IconData icon, String text, dynamic page) {
     double cardWidth = MediaQuery.of(context).size.width * 0.25; // Adjust card width based on screen size
     double cardHeight = cardWidth; // Keep height same as width
 
@@ -195,9 +274,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     );
                   }
                 },
-                child: Image.asset(
-                  imagePath,
-                  fit: BoxFit.cover, // Change to BoxFit.fitWidth if needed
+                child: Icon(
+                  icon,
+                  size: cardWidth * 0.5, // Adjust icon size based on card width
+                  color: Colors.blue, // Change the icon color if needed
                 ),
               ),
             ),
@@ -223,84 +303,4 @@ class CustomListItem {
   final String content;
 
   CustomListItem(this.name, this.content);
-}
-
-class AdminPage extends StatelessWidget {
-  const AdminPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Admin Page'),
-      ),
-      body: const Center(
-        child: Text('Admin Page Content'),
-      ),
-    );
-  }
-}
-
-class RegisterPage extends StatelessWidget {
-  const RegisterPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Register Page'),
-      ),
-      body: const Center(
-        child: Text('Register Page Content'),
-      ),
-    );
-  }
-}
-
-class TourPage extends StatelessWidget {
-  const TourPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Tour Page'),
-      ),
-      body: const Center(
-        child: Text('Tour Page Content'),
-      ),
-    );
-  }
-}
-
-class LoginPage extends StatelessWidget {
-  const LoginPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login Page'),
-      ),
-      body: const Center(
-        child: Text('Login Page Content'),
-      ),
-    );
-  }
-}
-
-class AboutPage extends StatelessWidget {
-  const AboutPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('About Page'),
-      ),
-      body: const Center(
-        child: Text('About Page Content'),
-      ),
-    );
-  }
 }
