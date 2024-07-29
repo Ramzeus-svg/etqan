@@ -27,11 +27,16 @@ class _LoginPageState extends State<LoginPage> {
     bool rememberMe = prefs.getBool('rememberMe') ?? false;
     if (rememberMe) {
       String? email = prefs.getString('email');
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => UserPage(email: email)),
-      );
-        } else {
+      if (email != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => UserPage(email: email)),
+        );
+      } else {
+        // Navigate to login page if email is null
+        _loadSavedCredentials();
+      }
+    } else {
       _loadSavedCredentials();
     }
   }
@@ -186,7 +191,7 @@ class _LoginPageState extends State<LoginPage> {
                       value: _rememberMe,
                       onChanged: (bool? value) {
                         setState(() {
-                          _rememberMe = value!;
+                          _rememberMe = value ?? false;
                         });
                       },
                       activeColor: Colors.blue,

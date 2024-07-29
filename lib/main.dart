@@ -36,10 +36,13 @@ void main() async {
 Future<Widget> getInitialPage() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   bool rememberMe = prefs.getBool('rememberMe') ?? false;
+
   if (rememberMe) {
     String? email = prefs.getString('email');
-    return UserPage(email: email);
+    if (email != null) {
+      return UserPage(email: email);
     }
+  }
   return MyHomePage();
 }
 

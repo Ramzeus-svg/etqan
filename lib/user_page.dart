@@ -16,8 +16,8 @@ class UserPage extends StatefulWidget {
 }
 
 class _UserPageState extends State<UserPage> {
-  FirebaseFirestore firestore = FirebaseFirestore.instance;
-  FirebaseStorage storage = FirebaseStorage.instance;
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  final FirebaseStorage storage = FirebaseStorage.instance;
   String userName = 'Loading...';
   String studentId = 'Loading...';
   List<CustomListItem> items = [];
@@ -33,15 +33,17 @@ class _UserPageState extends State<UserPage> {
   Future<void> initializeFirebase() async {
     try {
       await Firebase.initializeApp();
-      fetchUserData(widget.email);
-      fetchDataFromFirestore();
-      fetchImagesFromStorage();
+      await Future.wait([
+        fetchUserData(widget.email),
+        fetchDataFromFirestore(),
+        fetchImagesFromStorage(),
+      ]);
     } catch (e) {
       print('Error initializing Firebase: $e');
     }
   }
 
-  void fetchUserData(String email) async {
+  Future<void> fetchUserData(String email) async {
     try {
       DocumentSnapshot documentSnapshot = await firestore
           .collection('Users')
@@ -60,18 +62,22 @@ class _UserPageState extends State<UserPage> {
         });
       } else {
         setState(() {
+          userName = 'User not found';
+          studentId = 'N/A';
           isLoading = false;
         });
       }
     } catch (e) {
       print('Error fetching user data: $e');
       setState(() {
+        userName = 'Error';
+        studentId = 'N/A';
         isLoading = false;
       });
     }
   }
 
-  void fetchDataFromFirestore() async {
+  Future<void> fetchDataFromFirestore() async {
     try {
       QuerySnapshot querySnapshot = await firestore.collection('Paragraphs').get();
       List<CustomListItem> fetchedItems = querySnapshot.docs.map((doc) {
@@ -94,7 +100,7 @@ class _UserPageState extends State<UserPage> {
     }
   }
 
-  void fetchImagesFromStorage() async {
+  Future<void> fetchImagesFromStorage() async {
     try {
       ListResult result = await storage.ref('images').listAll();
       List<String> urls = await Future.wait(
@@ -217,6 +223,9 @@ class _UserPageState extends State<UserPage> {
                   GridView.count(
                     shrinkWrap: true,
                     crossAxisCount: 3,
+                    childAspectRatio: 1,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
                     children: [
                       _buildCategoryItem(Icons.category, 'Category'),
                       _buildCategoryItem(Icons.class_, 'Classes'),
@@ -238,6 +247,9 @@ class _UserPageState extends State<UserPage> {
                   GridView.count(
                     shrinkWrap: true,
                     crossAxisCount: 2,
+                    childAspectRatio: 2,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
                     children: [
                       _buildCourseItem('Flutter', '55 Videos', 'assets/flutter_logo.png'),
                       _buildCourseItem('React Native', '55 Videos', 'assets/react_native_logo.png'),
@@ -283,7 +295,7 @@ class _UserPageState extends State<UserPage> {
           child: Icon(icon, size: 30),
         ),
         SizedBox(height: 8),
-        Text(label),
+        Text(label, textAlign: TextAlign.center),
       ],
     );
   }
@@ -293,6 +305,7 @@ class _UserPageState extends State<UserPage> {
       child: Padding(
         padding: EdgeInsets.all(8),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(imageUrl, height: 80),
             SizedBox(height: 8),
