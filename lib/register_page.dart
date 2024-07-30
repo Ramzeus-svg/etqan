@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'login_page.dart';
@@ -24,6 +23,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   String _selectedDialCode = '+20';
   bool _isRegisterButtonEnabled = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -50,6 +50,10 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _registerUser() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
       final UserCredential userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
@@ -60,11 +64,20 @@ class _RegisterPageState extends State<RegisterPage> {
       if (user != null) {
         await _createUser();
       }
+    } on FirebaseAuthException catch (e) {
+      print('Exception registering user: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Registration failed: ${e.message}'),
+      ));
     } catch (e) {
       print('Exception registering user: $e');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Registration failed: ${(e is FirebaseAuthException) ? e.message : e.toString()}'),
+        content: Text('Registration failed: ${e.toString()}'),
       ));
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -98,7 +111,6 @@ class _RegisterPageState extends State<RegisterPage> {
             actions: [
               TextButton(
                 onPressed: () {
-                  print('Navigating to login page...');
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(builder: (context) => LoginPage()),
                   );
@@ -133,38 +145,13 @@ class _RegisterPageState extends State<RegisterPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
-                ),
-              ),
+              _buildTextField(_nameController, 'Name'),
               SizedBox(height: 16),
-              TextField(
-                controller: _usernameController,
-                decoration: InputDecoration(
-                  labelText: 'Username',
-                  border: OutlineInputBorder(),
-                ),
-              ),
+              _buildTextField(_usernameController, 'Username'),
               SizedBox(height: 16),
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: 'Mail',
-                  border: OutlineInputBorder(),
-                ),
-              ),
+              _buildTextField(_emailController, 'Email'),
               SizedBox(height: 16),
-              TextField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                ),
-                obscureText: true,
-              ),
+              _buildTextField(_passwordController, 'Password', obscureText: true),
               SizedBox(height: 16),
               Row(
                 children: [
@@ -192,41 +179,36 @@ class _RegisterPageState extends State<RegisterPage> {
                   SizedBox(width: 10),
                   Expanded(
                     flex: 2,
-                    child: TextField(
-                      controller: _phoneController,
-                      decoration: InputDecoration(
-                        labelText: 'WhatsApp Number',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
+                    child: _buildTextField(_phoneController, 'WhatsApp Number'),
                   ),
                 ],
               ),
               SizedBox(height: 16),
-              TextField(
-                controller: _universityController,
-                decoration: InputDecoration(
-                  labelText: 'University',
-                  border: OutlineInputBorder(),
-                ),
-              ),
+              _buildTextField(_universityController, 'University'),
               SizedBox(height: 16),
-              TextField(
-                controller: _branchController,
-                decoration: InputDecoration(
-                  labelText: 'Branch',
-                  border: OutlineInputBorder(),
-                ),
-              ),
+              _buildTextField(_branchController, 'Branch'),
               SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _isRegisterButtonEnabled ? _registerUser : null,
-                child: Text('Register'),
+                child: _isLoading
+                    ? CircularProgressIndicator()
+                    : Text('Register'),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label, {bool obscureText = false}) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(),
+      ),
+      obscureText: obscureText,
     );
   }
 }

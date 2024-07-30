@@ -33,7 +33,6 @@ class _LoginPageState extends State<LoginPage> {
           MaterialPageRoute(builder: (context) => UserPage(email: email)),
         );
       } else {
-        // Navigate to login page if email is null
         _loadSavedCredentials();
       }
     } else {
@@ -71,10 +70,15 @@ class _LoginPageState extends State<LoginPage> {
       );
       print('User logged in: ${userCredential.user?.email}');
       _handleLoginSuccess(email, password);
-    } catch (e) {
-      print('Error during sign-in: $e');
+    } on FirebaseAuthException catch (e) {
+      print('Error during sign-in: ${e.message}');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Authentication failed: $e')),
+        SnackBar(content: Text('Authentication failed: ${e.message}')),
+      );
+    } catch (e) {
+      print('Unexpected error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unexpected error: $e')),
       );
     }
   }
@@ -115,7 +119,7 @@ class _LoginPageState extends State<LoginPage> {
             child: Container(
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage('assets/login1.png'), // New background image
+                  image: AssetImage('assets/login1.png'), // Background image
                   fit: BoxFit.cover,
                   colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.5), BlendMode.darken),
                 ),
@@ -128,7 +132,7 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.asset(
-                  'assets/etqan.png', // Updated logo image
+                  'assets/etqan.png', // Logo image
                   width: 150,
                   height: 150,
                 ),
@@ -240,7 +244,7 @@ class _LoginPageState extends State<LoginPage> {
                 SizedBox(height: 20),
                 TextButton(
                   onPressed: () {
-                    // Handle forget password logic
+                    // Handle forgot password logic
                   },
                   child: Text(
                     'Forgot Password?',

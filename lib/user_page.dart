@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login_page.dart'; // Ensure you have this import for navigation
 
@@ -26,19 +25,18 @@ class _UserPageState extends State<UserPage> {
   @override
   void initState() {
     super.initState();
-    initializeFirebase();
+    initializeData();
   }
 
-  Future<void> initializeFirebase() async {
+  Future<void> initializeData() async {
     try {
-      await Firebase.initializeApp();
       await Future.wait([
         fetchUserData(widget.email),
         fetchDataFromFirestore(),
         fetchImagesFromStorage(),
       ]);
     } catch (e) {
-      print('Error initializing Firebase: $e');
+      print('Error initializing data: $e');
     }
   }
 
@@ -57,13 +55,11 @@ class _UserPageState extends State<UserPage> {
         setState(() {
           userName = firstName;
           this.studentId = studentId;
-          isLoading = false;
         });
       } else {
         setState(() {
           userName = 'User not found';
           studentId = 'N/A';
-          isLoading = false;
         });
       }
     } catch (e) {
@@ -71,6 +67,9 @@ class _UserPageState extends State<UserPage> {
       setState(() {
         userName = 'Error';
         studentId = 'N/A';
+      });
+    } finally {
+      setState(() {
         isLoading = false;
       });
     }
@@ -87,15 +86,9 @@ class _UserPageState extends State<UserPage> {
       }).toList();
       setState(() {
         items = fetchedItems;
-        if (!isLoading) {
-          isLoading = false;
-        }
       });
     } catch (e) {
       print('Error fetching data from Firestore: $e');
-      setState(() {
-        isLoading = false;
-      });
     }
   }
 
@@ -113,9 +106,6 @@ class _UserPageState extends State<UserPage> {
       });
     } catch (e) {
       print('Error fetching images from Firebase Storage: $e');
-      setState(() {
-        imageUrls = [];
-      });
     }
   }
 

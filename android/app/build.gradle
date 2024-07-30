@@ -1,15 +1,12 @@
 plugins {
     id "com.android.application"
-    id 'com.google.gms.google-services'
+    id "com.google.gms.google-services"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
 }
 
 // Define Kotlin version
 ext.kotlin_version = '1.8.22'
-
-def flutterVersionCode = project.hasProperty('flutter.versionCode') ? project.property('flutter.versionCode') : 1
-def flutterVersionName = project.hasProperty('flutter.versionName') ? project.property('flutter.versionName') : "1.0"
 
 android {
     namespace = "com.example.etqan"
@@ -38,7 +35,6 @@ android {
 }
 
 // Apply Kotlin plugin with version
-apply plugin: 'kotlin-android'
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     // Add other dependencies here

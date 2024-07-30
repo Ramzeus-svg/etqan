@@ -42,13 +42,13 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyA9xV4MuX4_HIkNCRWy2dNOgRRfDPa8cw0',
-    appId: '1:277429609000:web:a5c60579c023215a104b1d',
+    appId: '1:277429609000:web:907d2bd40e028c7e104b1d',
     messagingSenderId: '277429609000',
     projectId: 'etqan-center',
     authDomain: 'etqan-center.firebaseapp.com',
     databaseURL: 'https://etqan-center-default-rtdb.europe-west1.firebasedatabase.app',
     storageBucket: 'etqan-center.appspot.com',
-    measurementId: 'G-QD6248FS0D',
+    measurementId: 'G-3HVEVDW1J3',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
@@ -82,13 +82,13 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyA9xV4MuX4_HIkNCRWy2dNOgRRfDPa8cw0',
-    appId: '1:277429609000:web:22ad4997874778ed104b1d',
+    appId: '1:277429609000:web:bc2aa6591bdd1d44104b1d',
     messagingSenderId: '277429609000',
     projectId: 'etqan-center',
     authDomain: 'etqan-center.firebaseapp.com',
     databaseURL: 'https://etqan-center-default-rtdb.europe-west1.firebasedatabase.app',
     storageBucket: 'etqan-center.appspot.com',
-    measurementId: 'G-6Q0S8GEG96',
+    measurementId: 'G-72MJ3Y2X2G',
   );
 
 }

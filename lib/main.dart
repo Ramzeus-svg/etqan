@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'firebase_initializer.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'login_page.dart';
 import 'admin_page.dart';
@@ -11,25 +12,10 @@ import 'tour_page.dart';
 import 'about_page.dart';
 import 'user_page.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize Firebase only once
-  await Firebase.initializeApp(
-    options: FirebaseOptions(
-      apiKey: "AIzaSyA9xV4MuX4_HIkNCRWy2dNOgRRfDPa8cw0",
-      authDomain: "etqan-center.firebaseapp.com",
-      databaseURL: "https://etqan-center-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "etqan-center",
-      storageBucket: "etqan-center.appspot.com",
-      messagingSenderId: "277429609000",
-      appId: "1:277429609000:web:907d2bd40e028c7e104b1d",
-      measurementId: "G-3HVEVDW1J3",
-    ),
-  );
-
+  await FirebaseInitializer.initialize();
   final initialPage = await getInitialPage();
-
   runApp(MyApp(homePage: initialPage));
 }
 
@@ -70,6 +56,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<CustomListItem> items = [];
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -77,16 +64,19 @@ class _MyHomePageState extends State<MyHomePage> {
     fetchDataFromFirestore();
   }
 
-  void fetchDataFromFirestore() {
-    _firestore.collection('Paragraphs').get().then((querySnapshot) {
-      for (var doc in querySnapshot.docs) {
-        setState(() {
-          items.add(CustomListItem(doc['Name'], doc['Content']));
-        });
-      }
-    }).catchError((error) {
+  Future<void> fetchDataFromFirestore() async {
+    try {
+      final querySnapshot = await _firestore.collection('Paragraphs').get();
+      setState(() {
+        items = querySnapshot.docs.map((doc) => CustomListItem(doc['Name'], doc['Content'])).toList();
+        isLoading = false;
+      });
+    } catch (error) {
       print('Error getting documents: $error');
-    });
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   void showPasswordDialog() {
@@ -146,7 +136,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Hides the status bar and makes the app fullscreen
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
     return Scaffold(
@@ -201,7 +190,9 @@ class _MyHomePageState extends State<MyHomePage> {
                             ),
                           ),
                         ),
-                        Expanded(
+                        isLoading
+                            ? Center(child: CircularProgressIndicator())
+                            : Expanded(
                           child: ListView.builder(
                             padding: const EdgeInsets.only(top: 20.0),
                             itemCount: items.length,
@@ -248,8 +239,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget buildCard(BuildContext context, IconData icon, String text, dynamic page) {
-    double cardWidth = MediaQuery.of(context).size.width * 0.25; // Adjust card width based on screen size
-    double cardHeight = cardWidth; // Keep height same as width
+    double cardWidth = MediaQuery.of(context).size.width * 0.25;
+    double cardHeight = cardWidth;
 
     return Column(
       children: <Widget>[
@@ -267,7 +258,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: GestureDetector(
                 onTap: () {
                   if (text == 'Admin') {
-                    page(); // showPasswordDialog function call
+                    showPasswordDialog(); // Call the function directly
                   } else {
                     Navigator.push(
                       context,
@@ -277,8 +268,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
                 child: Icon(
                   icon,
-                  size: cardWidth * 0.5, // Adjust icon size based on card width
-                  color: Colors.blue, // Change the icon color if needed
+                  size: cardWidth * 0.5,
+                  color: Colors.blue,
                 ),
               ),
             ),
