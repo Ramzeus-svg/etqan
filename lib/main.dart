@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'firebase_initializer.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'login_page.dart';
 import 'admin_page.dart';
@@ -12,17 +11,40 @@ import 'tour_page.dart';
 import 'about_page.dart';
 import 'user_page.dart';
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await FirebaseInitializer.initialize();
-  final initialPage = await getInitialPage();
-  runApp(MyApp(homePage: initialPage));
+
+  try {
+    // Check if any Firebase apps have already been initialized
+    if (Firebase.apps.isEmpty) {
+      print("Initializing Firebase...");
+      await Firebase.initializeApp(
+        name:"Etqan",
+        options: FirebaseOptions(
+            apiKey: "AIzaSyA9xV4MuX4_HIkNCRWy2dNOgRRfDPa8cw0",
+            authDomain: "etqan-center.firebaseapp.com",
+            databaseURL: "https://etqan-center-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "etqan-center",
+            storageBucket: "etqan-center.appspot.com",
+            messagingSenderId: "277429609000",
+            appId: "1:277429609000:web:bc2aa6591bdd1d44104b1d",
+            measurementId: "G-72MJ3Y2X2G"
+        ),
+      );
+      print("Firebase initialized successfully.");
+    } else {
+      print("Firebase already initialized.");
+    }
+
+    runApp(MyApp(homePage: await getInitialPage()));
+  } catch (e) {
+    print('Error initializing Firebase: $e');
+  }
 }
 
 Future<Widget> getInitialPage() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   bool rememberMe = prefs.getBool('rememberMe') ?? false;
-
   if (rememberMe) {
     String? email = prefs.getString('email');
     if (email != null) {
@@ -41,7 +63,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: homePage,
-      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -56,7 +77,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<CustomListItem> items = [];
-  bool isLoading = true;
 
   @override
   void initState() {
@@ -64,19 +84,16 @@ class _MyHomePageState extends State<MyHomePage> {
     fetchDataFromFirestore();
   }
 
-  Future<void> fetchDataFromFirestore() async {
-    try {
-      final querySnapshot = await _firestore.collection('Paragraphs').get();
-      setState(() {
-        items = querySnapshot.docs.map((doc) => CustomListItem(doc['Name'], doc['Content'])).toList();
-        isLoading = false;
-      });
-    } catch (error) {
+  void fetchDataFromFirestore() {
+    _firestore.collection('Paragraphs').get().then((querySnapshot) {
+      for (var doc in querySnapshot.docs) {
+        setState(() {
+          items.add(CustomListItem(doc['Name'], doc['Content']));
+        });
+      }
+    }).catchError((error) {
       print('Error getting documents: $error');
-      setState(() {
-        isLoading = false;
-      });
-    }
+    });
   }
 
   void showPasswordDialog() {
@@ -136,6 +153,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Hides the status bar and makes the app fullscreen
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
     return Scaffold(
@@ -148,99 +166,93 @@ class _MyHomePageState extends State<MyHomePage> {
             fit: BoxFit.fill,
           ),
         ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              child: Column(
-                children: <Widget>[
-                  Container(
-                    margin: const EdgeInsets.only(top: 1.0, left: 10.0),
-                    child: const Text(
-                      'Hello, Guest',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontFamily: 'sans-serif-black',
-                        fontSize: 20.0,
+        child: SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              Container(
+                margin: const EdgeInsets.only(top: 1.0, left: 10.0),
+                child: const Text(
+                  'Hello, Guest',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'sans-serif-black',
+                    fontSize: 20.0,
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.height - 60.0,
+                child: Column(
+                  children: <Widget>[
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: <Widget>[
+                          buildCard(context, Icons.login, 'Login', LoginPage()),
+                          buildCard(context, Icons.tour, 'Tour', TourPage()),
+                          buildCard(context, Icons.app_registration, 'Register', RegisterPage()),
+                          buildCard(context, Icons.admin_panel_settings, 'Admin', showPasswordDialog),
+                          buildCard(context, Icons.info, 'About', AboutPage()),
+                        ],
                       ),
                     ),
-                  ),
-                  SizedBox(
-                    height: constraints.maxHeight - 30.0,
-                    child: Column(
-                      children: <Widget>[
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: <Widget>[
-                              buildCard(context, Icons.login, 'Login', LoginPage()),
-                              buildCard(context, Icons.tour, 'Tour', TourPage()),
-                              buildCard(context, Icons.app_registration, 'Register', RegisterPage()),
-                              buildCard(context, Icons.admin_panel_settings, 'Admin', showPasswordDialog),
-                              buildCard(context, Icons.info, 'About', AboutPage()),
-                            ],
-                          ),
+                    Container(
+                      margin: const EdgeInsets.only(top: 40.0, left: 0.0),
+                      child: const Text(
+                        'Announcements',
+                        style: TextStyle(
+                          color: Color(0xFF020255),
+                          fontSize: 20.0,
                         ),
-                        Container(
-                          margin: const EdgeInsets.only(top: 20.0, left: 0.0),
-                          child: const Text(
-                            'Announcements',
-                            style: TextStyle(
-                              color: Color(0xFF020255),
-                              fontSize: 20.0,
-                            ),
-                          ),
-                        ),
-                        isLoading
-                            ? Center(child: CircularProgressIndicator())
-                            : Expanded(
-                          child: ListView.builder(
-                            padding: const EdgeInsets.only(top: 20.0),
-                            itemCount: items.length,
-                            itemBuilder: (context, index) {
-                              return Card(
-                                margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                                elevation: 5.0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12.0),
-                                ),
-                                child: ListTile(
-                                  contentPadding: const EdgeInsets.all(16.0),
-                                  title: Text(
-                                    items[index].name,
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    items[index].content.length > 100
-                                        ? '${items[index].content.substring(0, 100)}...'
-                                        : items[index].content,
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  onTap: () {
-                                    showContentDialog(items[index].name, items[index].content);
-                                  },
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ],
+                    Expanded(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.only(top: 20.0),
+                        itemCount: items.length,
+                        itemBuilder: (context, index) {
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                            elevation: 5.0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.all(16.0),
+                              title: Text(
+                                items[index].name,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Text(
+                                items[index].content.length > 100
+                                    ? '${items[index].content.substring(0, 100)}...'
+                                    : items[index].content,
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              onTap: () {
+                                showContentDialog(items[index].name, items[index].content);
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            );
-          },
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget buildCard(BuildContext context, IconData icon, String text, dynamic page) {
-    double cardWidth = MediaQuery.of(context).size.width * 0.25;
-    double cardHeight = cardWidth;
+    double cardWidth = MediaQuery.of(context).size.width * 0.25; // Adjust card width based on screen size
+    double cardHeight = cardWidth; // Keep height same as width
 
     return Column(
       children: <Widget>[
@@ -258,7 +270,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: GestureDetector(
                 onTap: () {
                   if (text == 'Admin') {
-                    showPasswordDialog(); // Call the function directly
+                    page(); // showPasswordDialog function call
                   } else {
                     Navigator.push(
                       context,
@@ -268,8 +280,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
                 child: Icon(
                   icon,
-                  size: cardWidth * 0.5,
-                  color: Colors.blue,
+                  size: cardWidth * 0.5, // Adjust icon size based on card width
+                  color: Colors.blue, // Change the icon color if needed
                 ),
               ),
             ),

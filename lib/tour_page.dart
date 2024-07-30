@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class TourPage extends StatelessWidget {
+  const TourPage({super.key});
+
 
 
   @override

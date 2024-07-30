@@ -5,6 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'login_page.dart';
 
 class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
+
   @override
   _RegisterPageState createState() => _RegisterPageState();
 }
@@ -106,16 +108,16 @@ class _RegisterPageState extends State<RegisterPage> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Registration Successful'),
-            content: Text('Your registration was completed successfully.'),
+            title: const Text('Registration Successful'),
+            content: const Text('Your registration was completed successfully.'),
             actions: [
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (context) => LoginPage()),
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
                   );
                 },
-                child: Text('OK'),
+                child: const Text('OK'),
               ),
             ],
           );
@@ -137,7 +139,7 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Register'),
+        title: const Text('Register'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -146,13 +148,13 @@ class _RegisterPageState extends State<RegisterPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildTextField(_nameController, 'Name'),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildTextField(_usernameController, 'Username'),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildTextField(_emailController, 'Email'),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildTextField(_passwordController, 'Password', obscureText: true),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
@@ -170,29 +172,29 @@ class _RegisterPageState extends State<RegisterPage> {
                           _selectedDialCode = newValue!;
                         });
                       },
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Country Code',
                         border: OutlineInputBorder(),
                       ),
                     ),
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Expanded(
                     flex: 2,
                     child: _buildTextField(_phoneController, 'WhatsApp Number'),
                   ),
                 ],
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildTextField(_universityController, 'University'),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildTextField(_branchController, 'Branch'),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _isRegisterButtonEnabled ? _registerUser : null,
                 child: _isLoading
-                    ? CircularProgressIndicator()
-                    : Text('Register'),
+                    ? const CircularProgressIndicator()
+                    : const Text('Register'),
               ),
             ],
           ),
@@ -206,7 +208,7 @@ class _RegisterPageState extends State<RegisterPage> {
       controller: controller,
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(),
+        border: const OutlineInputBorder(),
       ),
       obscureText: obscureText,
     );

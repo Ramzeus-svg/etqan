@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class AdminPage extends StatelessWidget {
+  const AdminPage({super.key});
+
 
 
   @override

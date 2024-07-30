@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class AboutPage extends StatelessWidget {
+  const AboutPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -13,7 +15,7 @@ class AboutPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Center(
+            const Center(
               child: CircleAvatar(
                 radius: 50,
                 backgroundImage: AssetImage('assets/etqan.png'),
@@ -64,7 +66,7 @@ class AboutPage extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(Icons.email, color: Colors.teal),
+                const Icon(Icons.email, color: Colors.teal),
                 const SizedBox(width: 8),
                 Text(
                   'contact@etqancenter.com',
@@ -75,7 +77,7 @@ class AboutPage extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(Icons.phone, color: Colors.teal),
+                const Icon(Icons.phone, color: Colors.teal),
                 const SizedBox(width: 8),
                 Text(
                   '+123 456 7890',

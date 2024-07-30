@@ -8,6 +8,10 @@ plugins {
 // Define Kotlin version
 ext.kotlin_version = '1.8.22'
 
+// Define version code and version name
+def flutterVersionCode = project.hasProperty('flutterVersionCode') ? project.flutterVersionCode.toInteger() : 1
+def flutterVersionName = project.hasProperty('flutterVersionName') ? project.flutterVersionName : "1.0"
+
 android {
     namespace = "com.example.etqan"
     compileSdkVersion 34
@@ -23,7 +27,7 @@ android {
         resValue "string", "applicationName", "com.example.etqan.MainApplication"
         minSdkVersion 23
         targetSdkVersion 33
-        versionCode flutterVersionCode.toInteger()
+        versionCode flutterVersionCode
         versionName flutterVersionName
     }
 

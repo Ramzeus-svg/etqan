@@ -5,6 +5,8 @@ import 'register_page.dart';
 import 'user_page.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -57,7 +59,7 @@ class _LoginPageState extends State<LoginPage> {
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter both email and password')),
+        const SnackBar(content: Text('Please enter both email and password')),
       );
       return;
     }
@@ -106,7 +108,7 @@ class _LoginPageState extends State<LoginPage> {
   void _registerUser() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => RegisterPage()),
+      MaterialPageRoute(builder: (context) => const RegisterPage()),
     );
   }
 
@@ -119,7 +121,7 @@ class _LoginPageState extends State<LoginPage> {
             child: Container(
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage('assets/login1.png'), // Background image
+                  image: const AssetImage('assets/login1.png'), // Background image
                   fit: BoxFit.cover,
                   colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.5), BlendMode.darken),
                 ),
@@ -136,8 +138,8 @@ class _LoginPageState extends State<LoginPage> {
                   width: 150,
                   height: 150,
                 ),
-                SizedBox(height: 30),
-                Text(
+                const SizedBox(height: 30),
+                const Text(
                   'Welcome to Etqan Center',
                   style: TextStyle(
                     fontFamily: 'Montserrat',
@@ -146,7 +148,7 @@ class _LoginPageState extends State<LoginPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 30),
+                const SizedBox(height: 30),
                 TextField(
                   controller: _emailController,
                   decoration: InputDecoration(
@@ -156,12 +158,12 @@ class _LoginPageState extends State<LoginPage> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
-                    hintStyle: TextStyle(color: Colors.grey),
-                    prefixIcon: Icon(Icons.email, color: Colors.grey),
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    prefixIcon: const Icon(Icons.email, color: Colors.grey),
                   ),
                   keyboardType: TextInputType.emailAddress,
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 TextField(
                   controller: _passwordController,
                   decoration: InputDecoration(
@@ -171,8 +173,8 @@ class _LoginPageState extends State<LoginPage> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
-                    hintStyle: TextStyle(color: Colors.grey),
-                    prefixIcon: Icon(Icons.lock, color: Colors.grey),
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    prefixIcon: const Icon(Icons.lock, color: Colors.grey),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _showPassword ? Icons.visibility : Icons.visibility_off,
@@ -187,7 +189,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   obscureText: !_showPassword,
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -200,7 +202,7 @@ class _LoginPageState extends State<LoginPage> {
                       },
                       activeColor: Colors.blue,
                     ),
-                    Text(
+                    const Text(
                       'Remember Me',
                       style: TextStyle(
                         color: Colors.white,
@@ -209,7 +211,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ],
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
@@ -217,15 +219,15 @@ class _LoginPageState extends State<LoginPage> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
-                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
                   ),
                   onPressed: _loginUser,
-                  child: Text(
+                  child: const Text(
                     'Login',
                     style: TextStyle(fontSize: 18),
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
@@ -233,20 +235,20 @@ class _LoginPageState extends State<LoginPage> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
-                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
                   ),
                   onPressed: _registerUser,
-                  child: Text(
+                  child: const Text(
                     'Register',
                     style: TextStyle(fontSize: 18),
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 TextButton(
                   onPressed: () {
                     // Handle forgot password logic
                   },
-                  child: Text(
+                  child: const Text(
                     'Forgot Password?',
                     style: TextStyle(
                       color: Colors.white,

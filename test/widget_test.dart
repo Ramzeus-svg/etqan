@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../lib/main.dart';
+import 'package:etqab/main.dart';
 
 void main() {
   testWidgets('HomePage displays correctly', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(MyApp(homePage: MyHomePage()));
+    await tester.pumpWidget(const MyApp(homePage: MyHomePage()));
 
     // Verify that specific widgets are displayed. Adjust the following lines based on actual widgets in MyHomePage.
     expect(find.text('Hello, Guest'), findsOneWidget);

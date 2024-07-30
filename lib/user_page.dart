@@ -7,7 +7,7 @@ import 'login_page.dart'; // Ensure you have this import for navigation
 class UserPage extends StatefulWidget {
   final String email;
 
-  UserPage({required this.email});
+  const UserPage({super.key, required this.email});
 
   @override
   _UserPageState createState() => _UserPageState();
@@ -119,7 +119,7 @@ class _UserPageState extends State<UserPage> {
     await prefs.clear();
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => LoginPage()),
+      MaterialPageRoute(builder: (context) => const LoginPage()),
     );
   }
 
@@ -133,16 +133,16 @@ class _UserPageState extends State<UserPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: Icon(Icons.settings),
-                title: Text('Settings'),
+                leading: const Icon(Icons.settings),
+                title: const Text('Settings'),
                 onTap: () {
                   // Handle settings option
                   Navigator.pop(context); // Close the dialog
                 },
               ),
               ListTile(
-                leading: Icon(Icons.logout),
-                title: Text('Logout'),
+                leading: const Icon(Icons.logout),
+                title: const Text('Logout'),
                 onTap: () {
                   Navigator.pop(context); // Close the dialog
                   _logout();
@@ -159,42 +159,42 @@ class _UserPageState extends State<UserPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.purple,
+        backgroundColor: Colors.blue,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.menu),
+          icon: const Icon(Icons.menu),
           onPressed: _showOptionsDialog,
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.notifications),
+            icon: const Icon(Icons.notifications),
             onPressed: () {},
           ),
         ],
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
         child: Column(
           children: [
             Container(
-              color: Colors.purple,
-              padding: EdgeInsets.all(16),
+              color: Colors.blue,
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Hi, $userName',
-                    style: TextStyle(color: Colors.white, fontSize: 24),
+                    style: const TextStyle(color: Colors.white, fontSize: 24),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: TextField(
+                    child: const TextField(
                       decoration: InputDecoration(
                         hintText: 'Search here...',
                         border: InputBorder.none,
@@ -206,7 +206,7 @@ class _UserPageState extends State<UserPage> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
                   GridView.count(
@@ -224,15 +224,15 @@ class _UserPageState extends State<UserPage> {
                       _buildCategoryItem(Icons.leaderboard, 'LeaderBoard'),
                     ],
                   ),
-                  SizedBox(height: 16),
-                  Row(
+                  const SizedBox(height: 16),
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('Courses', style: TextStyle(fontSize: 18)),
                       Text('See All', style: TextStyle(color: Colors.blue)),
                     ],
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   GridView.count(
                     shrinkWrap: true,
                     crossAxisCount: 2,
@@ -253,7 +253,7 @@ class _UserPageState extends State<UserPage> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
@@ -271,6 +271,12 @@ class _UserPageState extends State<UserPage> {
             label: 'Account',
           ),
         ],
+        currentIndex: 0, // Set this to the index of the currently selected item
+        selectedItemColor: Colors.blue, // Color for the selected item
+        unselectedItemColor: Colors.grey, // Color for the unselected items
+        onTap: (index) {
+          // Handle item tap, change state to update the selected index
+        },
       ),
     );
   }
@@ -283,7 +289,7 @@ class _UserPageState extends State<UserPage> {
           radius: 25,
           child: Icon(icon, size: 30),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Text(label, textAlign: TextAlign.center),
       ],
     );
@@ -292,14 +298,14 @@ class _UserPageState extends State<UserPage> {
   Widget _buildCourseItem(String title, String subtitle, String imageUrl) {
     return Card(
       child: Padding(
-        padding: EdgeInsets.all(8),
+        padding: const EdgeInsets.all(8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(imageUrl, height: 80),
-            SizedBox(height: 8),
-            Text(title, style: TextStyle(fontSize: 16)),
-            Text(subtitle, style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 8),
+            Text(title, style: const TextStyle(fontSize: 16)),
+            Text(subtitle, style: const TextStyle(color: Colors.grey)),
           ],
         ),
       ),

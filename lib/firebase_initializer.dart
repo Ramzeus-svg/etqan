@@ -11,15 +11,16 @@ class FirebaseInitializer {
 
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp(
-        options: FirebaseOptions(
-          apiKey: "AIzaSyA9xV4MuX4_HIkNCRWy2dNOgRRfDPa8cw0",
-          authDomain: "etqan-center.firebaseapp.com",
-          databaseURL: "https://etqan-center-default-rtdb.europe-west1.firebasedatabase.app",
-          projectId: "etqan-center",
-          storageBucket: "etqan-center.appspot.com",
-          messagingSenderId: "277429609000",
-          appId: "1:277429609000:web:907d2bd40e028c7e104b1d",
-          measurementId: "G-3HVEVDW1J3",
+        name:"Etqan",
+        options: const FirebaseOptions(
+            apiKey: "AIzaSyA9xV4MuX4_HIkNCRWy2dNOgRRfDPa8cw0",
+            authDomain: "etqan-center.firebaseapp.com",
+            databaseURL: "https://etqan-center-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "etqan-center",
+            storageBucket: "etqan-center.appspot.com",
+            messagingSenderId: "277429609000",
+            appId: "1:277429609000:web:bc2aa6591bdd1d44104b1d",
+            measurementId: "G-72MJ3Y2X2G"
         ),
       );
       print('Firebase initialized');
