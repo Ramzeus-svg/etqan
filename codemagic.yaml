@@ -1,38 +1,21 @@
 workflows:
-  default-workflow:
-    name: Etqan
+  default:
+    name: Build and Test
     max_build_duration: 60
     environment:
       flutter: stable
       xcode: latest
       cocoapods: default
-      variables:
-        FLUTTER_BUILD_NUMBER: 1 # You can increment this for each build
-
     scripts:
-      - name: Install dependencies
+      - name: Install Dependencies
         script: |
           flutter pub get
-
-      - name: Run tests
+          pod install --project-directory=ios
+      - name: Run Tests
         script: |
           flutter test
-
-    publishing:
-      email:
-        recipients:
-          - "mudyramzy@gmail.com" # Replace with your email to receive build notifications
-
-    app_store_connect:
-      # Configuration for iOS app deployment
-      api_key_id: $APP_STORE_CONNECT_API_KEY_ID
-      issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-      private_key: Encrypted(...)
-      
-    google_play:
-      # Configuration for Android app deployment
-      credentials: Encrypted(...)
-
+      - name: Build iOS App
+        script: |
+          flutter build ios --release
     artifacts:
-      - build/app/outputs/flutter-apk/app-release.apk
-      - build/ios/ipa/*.ipa
+      - build/ios/iphoneos/Runner.app
