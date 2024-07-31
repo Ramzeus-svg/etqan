@@ -19,7 +19,6 @@ void main() async {
     if (Firebase.apps.isEmpty) {
       print("Initializing Firebase...");
       await Firebase.initializeApp(
-        name:"Etqan",
         options: FirebaseOptions(
             apiKey: "AIzaSyA9xV4MuX4_HIkNCRWy2dNOgRRfDPa8cw0",
             authDomain: "etqan-center.firebaseapp.com",
@@ -181,7 +180,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
               SizedBox(
-                height: MediaQuery.of(context).size.height - 60.0,
+                height: MediaQuery.of(context).size.height - 35.0,
                 child: Column(
                   children: <Widget>[
                     SingleChildScrollView(

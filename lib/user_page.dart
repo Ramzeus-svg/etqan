@@ -206,17 +206,17 @@ class _UserPageState extends State<UserPage> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(6),
               child: Column(
                 children: [
                   GridView.count(
                     shrinkWrap: true,
                     crossAxisCount: 3,
                     childAspectRatio: 1,
-                    crossAxisSpacing: 8,
+                    crossAxisSpacing: 2,
                     mainAxisSpacing: 8,
                     children: [
-                      _buildCategoryItem(Icons.category, 'Category'),
+                      _buildCategoryItem(Icons.golf_course, 'Category'),
                       _buildCategoryItem(Icons.class_, 'Classes'),
                       _buildCategoryItem(Icons.free_breakfast, 'Free Course'),
                       _buildCategoryItem(Icons.book, 'BookStore'),
@@ -224,7 +224,7 @@ class _UserPageState extends State<UserPage> {
                       _buildCategoryItem(Icons.leaderboard, 'LeaderBoard'),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 6),
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -232,11 +232,11 @@ class _UserPageState extends State<UserPage> {
                       Text('See All', style: TextStyle(color: Colors.blue)),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 46),
                   GridView.count(
                     shrinkWrap: true,
                     crossAxisCount: 2,
-                    childAspectRatio: 2,
+                    childAspectRatio: 1,
                     crossAxisSpacing: 8,
                     mainAxisSpacing: 8,
                     children: [

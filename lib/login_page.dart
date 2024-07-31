@@ -112,9 +112,72 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  void _showForgotPasswordDialog() {
+    final TextEditingController emailController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset Password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(
+                labelText: 'Enter your email',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final String email = emailController.text.trim();
+              if (email.isNotEmpty) {
+                try {
+                  await _firebaseAuth.sendPasswordResetEmail(email: email);
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Password reset email sent.'),
+                    ),
+                  );
+                } catch (e) {
+                  print('Error: $e');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e')),
+                  );
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter your email.'),
+                  ),
+                );
+              }
+            },
+            child: const Text('Send'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: BackButton(
+          color: Colors.grey,
+        ),
+        backgroundColor: Color(0xFF03141C),
+        elevation: 60,
+      ),
       body: Stack(
         children: [
           Positioned.fill(
@@ -245,9 +308,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 20),
                 TextButton(
-                  onPressed: () {
-                    // Handle forgot password logic
-                  },
+                  onPressed: _showForgotPasswordDialog,
                   child: const Text(
                     'Forgot Password?',
                     style: TextStyle(
