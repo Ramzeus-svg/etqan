@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'firebase_options.dart';
 
 import 'login_page.dart';
 import 'admin_page.dart';
@@ -20,7 +21,7 @@ void main() async {
       print("Initializing Firebase...");
       await Firebase.initializeApp(
         options: FirebaseOptions(
-            apiKey: "AIzaSyA9xV4MuX4_HIkNCRWy2dNOgRRfDPa8cw0",
+            apiKey: "AIzaSyCCKGxDtkqnVOQHVYqBIvvTJI-Ci_vVKf4",
             authDomain: "etqan-center.firebaseapp.com",
             databaseURL: "https://etqan-center-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "etqan-center",

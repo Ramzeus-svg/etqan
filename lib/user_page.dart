@@ -19,7 +19,7 @@ class _UserPageState extends State<UserPage> {
   String userName = 'Loading...';
   String studentId = 'Loading...';
   List<CustomListItem> items = [];
-  List<String> imageUrls = [];
+  Map<String, String> courseImages = {};
   bool isLoading = true;
 
   @override
@@ -32,8 +32,8 @@ class _UserPageState extends State<UserPage> {
     try {
       await Future.wait([
         fetchUserData(widget.email),
-        fetchDataFromFirestore(),
-        fetchImagesFromStorage(),
+        fetchCoursesFromFirestore(),
+        fetchCourseImagesFromStorage(),
       ]);
     } catch (e) {
       print('Error initializing data: $e');
@@ -75,13 +75,13 @@ class _UserPageState extends State<UserPage> {
     }
   }
 
-  Future<void> fetchDataFromFirestore() async {
+  Future<void> fetchCoursesFromFirestore() async {
     try {
-      QuerySnapshot querySnapshot = await firestore.collection('Paragraphs').get();
+      QuerySnapshot querySnapshot = await firestore.collection('Courses').get();
       List<CustomListItem> fetchedItems = querySnapshot.docs.map((doc) {
         return CustomListItem(
-          name: doc['Name'] ?? 'Unknown',
-          content: doc['Content'] ?? '',
+          name: doc['name'] ?? 'Unknown',
+          content: '', // Assuming no content needed for courses
         );
       }).toList();
       setState(() {
@@ -92,17 +92,23 @@ class _UserPageState extends State<UserPage> {
     }
   }
 
-  Future<void> fetchImagesFromStorage() async {
+  Future<void> fetchCourseImagesFromStorage() async {
     try {
-      ListResult result = await storage.ref('images').listAll();
-      List<String> urls = await Future.wait(
-        result.items.map((Reference ref) async {
-          String url = await ref.getDownloadURL();
-          return url;
-        }).toList(),
-      );
+      ListResult result = await storage.ref('courses').listAll();
+      Map<String, String> imageUrls = {};
+      for (var ref in result.prefixes) {
+        // Loop through subfolders (courses)
+        String courseName = ref.name; // Assuming folder name is the course name
+        try {
+          String courseImageUrl = await storage.ref('${ref.fullPath}/course_image.png').getDownloadURL();
+          imageUrls[courseName] = courseImageUrl;
+        } catch (e) {
+          print('Error fetching image URL for $courseName: $e');
+          // Handle cases where the image does not exist
+        }
+      }
       setState(() {
-        imageUrls = urls;
+        courseImages = imageUrls;
       });
     } catch (e) {
       print('Error fetching images from Firebase Storage: $e');
@@ -174,82 +180,89 @@ class _UserPageState extends State<UserPage> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              color: Colors.blue,
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Hi, $userName',
-                    style: const TextStyle(color: Colors.white, fontSize: 24),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
+          : RefreshIndicator(
+        onRefresh: () async {
+          await initializeData(); // Refresh data on pull
+        },
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Container(
+                color: Colors.blue,
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Hi, $userName',
+                      style: const TextStyle(color: Colors.white, fontSize: 24),
                     ),
-                    child: const TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Search here...',
-                        border: InputBorder.none,
-                        icon: Icon(Icons.search),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Search here...',
+                          border: InputBorder.none,
+                          icon: Icon(Icons.search),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(6),
-              child: Column(
-                children: [
-                  GridView.count(
-                    shrinkWrap: true,
-                    crossAxisCount: 3,
-                    childAspectRatio: 1,
-                    crossAxisSpacing: 2,
-                    mainAxisSpacing: 8,
-                    children: [
-                      _buildCategoryItem(Icons.golf_course, 'Category'),
-                      _buildCategoryItem(Icons.class_, 'Classes'),
-                      _buildCategoryItem(Icons.free_breakfast, 'Free Course'),
-                      _buildCategoryItem(Icons.book, 'BookStore'),
-                      _buildCategoryItem(Icons.live_tv, 'Live Course'),
-                      _buildCategoryItem(Icons.leaderboard, 'LeaderBoard'),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Courses', style: TextStyle(fontSize: 18)),
-                      Text('See All', style: TextStyle(color: Colors.blue)),
-                    ],
-                  ),
-                  const SizedBox(height: 46),
-                  GridView.count(
-                    shrinkWrap: true,
-                    crossAxisCount: 2,
-                    childAspectRatio: 1,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 8,
-                    children: [
-                      _buildCourseItem('Flutter', '55 Videos', 'assets/flutter_logo.png'),
-                      _buildCourseItem('React Native', '55 Videos', 'assets/react_native_logo.png'),
-                      _buildCourseItem('Python', '30 Videos', 'assets/python_logo.png'),
-                      _buildCourseItem('Angular', '40 Videos', 'assets/angular_logo.png'),
-                    ],
-                  ),
-                ],
+              Padding(
+                padding: const EdgeInsets.all(6),
+                child: Column(
+                  children: [
+                    GridView.count(
+                      shrinkWrap: true,
+                      crossAxisCount: 3,
+                      childAspectRatio: 1,
+                      crossAxisSpacing: 2,
+                      mainAxisSpacing: 8,
+                      children: [
+                        _buildCategoryItem(Icons.golf_course, 'Category'),
+                        _buildCategoryItem(Icons.class_, 'Classes'),
+                        _buildCategoryItem(Icons.free_breakfast, 'Free Course'),
+                        _buildCategoryItem(Icons.book, 'BookStore'),
+                        _buildCategoryItem(Icons.live_tv, 'Live Course'),
+                        _buildCategoryItem(Icons.leaderboard, 'LeaderBoard'),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Courses', style: TextStyle(fontSize: 18)),
+                        Text('See All', style: TextStyle(color: Colors.blue)),
+                      ],
+                    ),
+                    const SizedBox(height: 46),
+                    GridView.builder(
+                      shrinkWrap: true,
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 1,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                      ),
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        final course = items[index];
+                        final imageUrl = courseImages[course.name] ?? '';
+                        return _buildCourseItem(course.name, '55 Videos', imageUrl);
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -302,7 +315,7 @@ class _UserPageState extends State<UserPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(imageUrl, height: 80),
+            Image.network(imageUrl, height: 80, fit: BoxFit.cover),
             const SizedBox(height: 8),
             Text(title, style: const TextStyle(fontSize: 16)),
             Text(subtitle, style: const TextStyle(color: Colors.grey)),

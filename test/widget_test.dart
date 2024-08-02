@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:etqab/main.dart';
+import 'package:Etqan/main.dart';
 
 void main() {
   testWidgets('HomePage displays correctly', (WidgetTester tester) async {
