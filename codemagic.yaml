@@ -13,13 +13,17 @@ workflows:
           flutter --version
           flutter pub get
           gem install cocoapods
-          pod repo update
-          pod install --project-directory=ios
-      - name: Update Pods
+      - name: Clean and update Pods
         script: |
           cd ios
-          pod deintegrate
+          rm -rf Pods
+          rm -rf Podfile.lock
+          pod cache clean --all
+          pod repo update
           pod install
+      - name: Clean Flutter build
+        script: |
+          flutter clean
       - name: Build iOS
         script: |
           flutter build ios --release --no-codesign
