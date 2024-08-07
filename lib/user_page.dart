@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'login_page.dart'; // Ensure you have this import for navigation
 
 class UserPage extends StatefulWidget {
@@ -26,6 +27,10 @@ class _UserPageState extends State<UserPage> {
   void initState() {
     super.initState();
     initializeData();
+    FirebaseAppCheck.instance.activate(
+      androidProvider: AndroidProvider.playIntegrity, // Android
+      appleProvider: AppleProvider.deviceCheck, // iOSn
+    );
   }
 
   Future<void> initializeData() async {
@@ -37,6 +42,10 @@ class _UserPageState extends State<UserPage> {
       ]);
     } catch (e) {
       print('Error initializing data: $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -68,10 +77,6 @@ class _UserPageState extends State<UserPage> {
         userName = 'Error';
         studentId = 'N/A';
       });
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
     }
   }
 
@@ -94,24 +99,33 @@ class _UserPageState extends State<UserPage> {
 
   Future<void> fetchCourseImagesFromStorage() async {
     try {
-      ListResult result = await storage.ref('courses').listAll();
+      QuerySnapshot courseQuerySnapshot = await firestore.collection('Courses').get();
       Map<String, String> imageUrls = {};
-      for (var ref in result.prefixes) {
-        // Loop through subfolders (courses)
-        String courseName = ref.name; // Assuming folder name is the course name
-        try {
-          String courseImageUrl = await storage.ref('${ref.fullPath}/course_image.png').getDownloadURL();
-          imageUrls[courseName] = courseImageUrl;
-        } catch (e) {
-          print('Error fetching image URL for $courseName: $e');
-          // Handle cases where the image does not exist
+
+      for (var courseDoc in courseQuerySnapshot.docs) {
+        String courseName = courseDoc['name'] ?? '';
+
+        if (courseName.isNotEmpty) {
+          try {
+            String courseImagePath = 'courses/$courseName/$courseName.png';
+            print('Attempting to fetch image from: $courseImagePath'); // Debug print
+
+            String courseImageUrl = await storage.ref(courseImagePath).getDownloadURL();
+            print('Successfully fetched image URL: $courseImageUrl'); // Debug print
+            imageUrls[courseName] = courseImageUrl;
+          } catch (e) {
+            print('Error fetching image URL for $courseName: $e');
+            // Use a default image URL or a placeholder image
+            imageUrls[courseName] = 'https://example.com/placeholder.png';
+          }
         }
       }
+
       setState(() {
         courseImages = imageUrls;
       });
     } catch (e) {
-      print('Error fetching images from Firebase Storage: $e');
+      print('Error fetching courses or images from Firestore and Firebase Storage: $e');
     }
   }
 
@@ -310,17 +324,38 @@ class _UserPageState extends State<UserPage> {
 
   Widget _buildCourseItem(String title, String subtitle, String imageUrl) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.network(imageUrl, height: 80, fit: BoxFit.cover),
-            const SizedBox(height: 8),
-            Text(title, style: const TextStyle(fontSize: 16)),
-            Text(subtitle, style: const TextStyle(color: Colors.grey)),
-          ],
-        ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      elevation: 4,
+      child: Column(
+        children: [
+          Expanded(
+            child: imageUrl.isNotEmpty
+                ? Image.network(
+              imageUrl,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              errorBuilder: (context, error, stackTrace) {
+                print('Error loading image: $error');
+                return const Icon(Icons.error);
+              },
+            )
+                : const Center(child: Icon(Icons.image, size: 50)), // Placeholder if URL is empty
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(subtitle),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

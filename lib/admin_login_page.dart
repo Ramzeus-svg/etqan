@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore package
 import 'package:shared_preferences/shared_preferences.dart';
-import 'register_page.dart';
-import 'user_page.dart';
+import 'register_admin_page.dart';
+import 'admin_page.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class AdminLoginPage extends StatefulWidget {
+  const AdminLoginPage({super.key});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  _AdminLoginPageState createState() => _AdminLoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _AdminLoginPageState extends State<AdminLoginPage> {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -32,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
       if (email != null) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => UserPage(email: email)),
+          MaterialPageRoute(builder: (context) => AdminPage()), // Navigate to AdminPage
         );
       } else {
         _loadSavedCredentials();
@@ -65,13 +66,23 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     try {
-      print('Attempting to log in user with email: $email');
+      print('Attempting to log in admin with email: $email');
       UserCredential userCredential = await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      print('User logged in: ${userCredential.user?.email}');
-      _handleLoginSuccess(email, password);
+
+      // Check if the user is an admin
+      DocumentSnapshot adminSnapshot = await FirebaseFirestore.instance.collection('Admins').doc(email).get();
+      if (adminSnapshot.exists) {
+        print('Admin logged in: ${userCredential.user?.email}');
+        _handleLoginSuccess(email, password);
+      } else {
+        await _firebaseAuth.signOut();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('You are not authorized as an admin')),
+        );
+      }
     } on FirebaseAuthException catch (e) {
       print('Error during sign-in: ${e.message}');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -100,7 +111,7 @@ class _LoginPageState extends State<LoginPage> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => UserPage(email: email),
+        builder: (context) => AdminPage(), // Navigate to AdminPage
       ),
     );
   }
@@ -108,7 +119,7 @@ class _LoginPageState extends State<LoginPage> {
   void _registerUser() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const RegisterPage()),
+      MaterialPageRoute(builder: (context) => const RegisterAdminPage()),
     );
   }
 
@@ -175,8 +186,8 @@ class _LoginPageState extends State<LoginPage> {
         leading: BackButton(
           color: Colors.grey,
         ),
-        backgroundColor: Color(0xFF0B1122),
-        elevation: 0,
+        backgroundColor: Color(0xFF03141C),
+        elevation: 60,
       ),
       body: Stack(
         children: [
@@ -203,7 +214,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 30),
                 const Text(
-                  'Welcome to Etqan Center',
+                  'Welcome to Etqan Center Admin',
                   style: TextStyle(
                     fontFamily: 'Montserrat',
                     fontSize: 28,
