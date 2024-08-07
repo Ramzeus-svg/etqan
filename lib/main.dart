@@ -3,24 +3,17 @@ import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:js/js.dart'; // Import js package
 import 'firebase_options.dart';
 
 import 'login_page.dart';
-import 'admin_page.dart';
 import 'admin_login_page.dart'; // Import AdminLoginPage
 import 'register_page.dart';
 import 'tour_page.dart';
 import 'about_page.dart';
 import 'user_page.dart';
 
-
-external void setWindowSize(int width, int height);
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-
 
   try {
     if (Firebase.apps.isEmpty) {
