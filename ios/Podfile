@@ -1,3 +1,5 @@
+source 'https://github.com/CocoaPods/Specs.git'
+
 platform :ios, '13.0'
 
 # CocoaPods analytics
@@ -6,10 +8,17 @@ install! 'cocoapods', :generate_multiple_pod_projects => true
 target 'Runner' do
   use_frameworks!
 
-  # Pods for Runner
+  # Firebase pods
+  pod 'Firebase/Core'
   pod 'Firebase/Analytics'
   pod 'Firebase/Auth'
   pod 'Firebase/Firestore'
+  pod 'Firebase/Storage'
+  pod 'Firebase/Crashlytics'
+  pod 'Firebase/RemoteConfig'
+  pod 'Firebase/Messaging'
+  pod 'Firebase/DynamicLinks'
+
   # Add other pods here
 
 end

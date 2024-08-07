@@ -1,0 +1,23 @@
+workflows:
+  ios-build:
+    name: Build iOS app
+    max_build_duration: 60
+    environment:
+      vars:
+        FLUTTER_CHANNEL: stable
+        FLUTTER_VERSION: "latest"
+    scripts:
+      - name: Install dependencies
+        script: |
+          flutter pub get
+          gem install cocoapods
+          pod repo update
+          pod install --project-directory=ios
+      - name: Build iOS
+        script: |
+          flutter build ios --release --no-codesign
+    artifacts:
+      - build/ios/iphoneos/*.app
+    publishing:
+      artifacts:
+        - build/ios/iphoneos/*.ipa
