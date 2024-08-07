@@ -1,15 +1,15 @@
-# Uncomment the next line to define a global platform for your project
 platform :ios, '13.0'
 
+# CocoaPods analytics
+install! 'cocoapods', :generate_multiple_pod_projects => true
+
 target 'Runner' do
-  # Comment the next line if you don't want to use dynamic frameworks
   use_frameworks!
 
   # Pods for Runner
-
-  target 'RunnerTests' do
-    inherit! :search_paths
-    # Pods for testing
-  end
+  pod 'Firebase/Analytics'
+  pod 'Firebase/Auth'
+  pod 'Firebase/Firestore'
+  # Add other pods here
 
 end
