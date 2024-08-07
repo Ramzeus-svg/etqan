@@ -14,14 +14,13 @@ import 'tour_page.dart';
 import 'about_page.dart';
 import 'user_page.dart';
 
-@JS('setWindowSize')
+
 external void setWindowSize(int width, int height);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Set the desired resolution
-  setWindowSize(1024, 768);
+
 
   try {
     if (Firebase.apps.isEmpty) {
@@ -196,7 +195,7 @@ class _MyHomePageState extends State<MyHomePage> {
         height: double.infinity,
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/logo.png'),
+            image: AssetImage('assets/login1.png'),
             fit: BoxFit.fill,
           ),
         ),
@@ -265,7 +264,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: const Text(
                         'Announcements',
                         style: TextStyle(
-                          color: Color(0xFF020255),
+                          color: Colors.white,
                           fontSize: 20.0,
                         ),
                       ),
@@ -274,7 +273,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: RefreshIndicator(
                         onRefresh: fetchDataFromFirestore,
                         child: ListView.builder(
-                          padding: const EdgeInsets.only(top: 20.0),
+                          padding: const EdgeInsets.only(top: 0.0),
                           itemCount: items.length,
                           itemBuilder: (context, index) {
                             return Card(
