@@ -7,6 +7,9 @@ workflows:
         FLUTTER_CHANNEL: stable
         FLUTTER_VERSION: 3.24.0
     scripts:
+      - name: Set Flutter version
+        script: |
+          flutter version 3.24.0
       - name: Install dependencies
         script: |
           flutter pub get
