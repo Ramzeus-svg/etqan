@@ -160,14 +160,6 @@ class _LoginPageState extends State<LoginPage> {
     final double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      appBar: AppBar(
-        leading: const BackButton(
-          color: Colors.grey,
-        ),
-        backgroundColor: const Color(0xFF0B1122),
-        elevation: 0,
-        toolbarHeight: screenHeight * 0.07, // Reduced AppBar height
-      ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -183,6 +175,16 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Align(
+                alignment: Alignment.topLeft,
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.grey),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
+              SizedBox(height: screenHeight * 0.03),
               Image.asset(
                 'assets/etqan.png',
                 width: screenWidth * 0.4, // Adjusted width for responsiveness
