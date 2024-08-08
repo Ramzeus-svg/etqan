@@ -1,11 +1,11 @@
-name: iOS-ipa-build
+name: Etqan
 
 on:
   workflow_dispatch:
 
 jobs:
   build-ios:
-    name: 🎉 iOS Build
+    name: Etqan
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
@@ -36,7 +36,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/ios/iphoneos/FlutterIpaExport.ipa
+          file: build/ios/iphoneos/Etqan.ipa
           tag: v1.0
           overwrite: true
           body: "This is first release"
