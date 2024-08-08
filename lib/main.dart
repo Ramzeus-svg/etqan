@@ -15,6 +15,7 @@ import 'user_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   try {
     if (Firebase.apps.isEmpty) {
@@ -64,7 +65,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<CustomListItem> items = [];
-
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -180,132 +180,128 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-
     return Scaffold(
-      body: SafeArea( // Added SafeArea to avoid notch
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/login1.png'),
-              fit: BoxFit.fill,
-            ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/login1.png'),
+            fit: BoxFit.cover, // Changed to cover to avoid white bars
           ),
-          child: SingleChildScrollView(
-            child: Column(
-              children: <Widget>[
-                Container(
-                  margin: const EdgeInsets.only(top: 20.0, left: 20.0), // Adjusted margin for better visibility
-                  child: const Text(
-                    'Hello, Guest',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontFamily: 'sans-serif-black',
-                      fontSize: 24.0, // Adjusted font size for better visibility
-                    ),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              Container(
+                margin: const EdgeInsets.only(top: 50.0, left: 20.0),
+                child: const Text(
+                  'Hello, Guest',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'sans-serif-black',
+                    fontSize: 24.0,
                   ),
                 ),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height - 35.0,
-                  child: Column(
-                    children: <Widget>[
-                      Stack(
-                        children: [
-                          SingleChildScrollView(
-                            controller: _scrollController,
-                            scrollDirection: Axis.horizontal,
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.height - 35.0,
+                child: Column(
+                  children: <Widget>[
+                    Stack(
+                      children: [
+                        SingleChildScrollView(
+                          controller: _scrollController,
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: <Widget>[
+                              buildCard(context, Icons.login, 'Login', LoginPage()),
+                              buildCard(context, Icons.tour, 'Tour', TourPage()),
+                              buildCard(context, Icons.app_registration, 'Register', RegisterPage()),
+                              buildCard(context, Icons.admin_panel_settings, 'Admin', null), // Pass null for admin
+                              buildCard(context, Icons.info, 'About', AboutPage()),
+                            ],
+                          ),
+                        ),
+                        if (kIsWeb) // Only show invisible buttons on web
+                          Positioned.fill(
                             child: Row(
-                              children: <Widget>[
-                                buildCard(context, Icons.login, 'Login', LoginPage()),
-                                buildCard(context, Icons.tour, 'Tour', TourPage()),
-                                buildCard(context, Icons.app_registration, 'Register', RegisterPage()),
-                                buildCard(context, Icons.admin_panel_settings, 'Admin', null), // Pass null for admin
-                                buildCard(context, Icons.info, 'About', AboutPage()),
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                GestureDetector(
+                                  behavior: HitTestBehavior.translucent,
+                                  onTap: _scrollLeft,
+                                  child: Container(
+                                    width: 30.0,
+                                    height: double.infinity,
+                                    color: Colors.transparent,
+                                  ),
+                                ),
+                                GestureDetector(
+                                  behavior: HitTestBehavior.translucent,
+                                  onTap: _scrollRight,
+                                  child: Container(
+                                    width: 30.0,
+                                    height: double.infinity,
+                                    color: Colors.transparent,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
-                          if (kIsWeb) // Only show invisible buttons on web
-                            Positioned.fill(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  GestureDetector(
-                                    behavior: HitTestBehavior.translucent,
-                                    onTap: _scrollLeft,
-                                    child: Container(
-                                      width: 30.0,
-                                      height: double.infinity,
-                                      color: Colors.transparent,
-                                    ),
-                                  ),
-                                  GestureDetector(
-                                    behavior: HitTestBehavior.translucent,
-                                    onTap: _scrollRight,
-                                    child: Container(
-                                      width: 30.0,
-                                      height: double.infinity,
-                                      color: Colors.transparent,
-                                    ),
-                                  ),
-                                ],
+                      ],
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(top: 10.0, left: 0.0),
+                      child: const Text(
+                        'Announcements',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20.0,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: fetchDataFromFirestore,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.only(top: 0.0),
+                          itemCount: items.length,
+                          itemBuilder: (context, index) {
+                            return Card(
+                              margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                              elevation: 5.0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.0),
                               ),
-                            ),
-                        ],
-                      ),
-                      Container(
-                        margin: const EdgeInsets.only(top: 40.0, left: 0.0),
-                        child: const Text(
-                          'Announcements',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20.0,
-                          ),
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.all(16.0),
+                                title: Text(
+                                  items[index].name,
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  items[index].content.length > 100
+                                      ? '${items[index].content.substring(0, 100)}...'
+                                      : items[index].content,
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                                onTap: () {
+                                  showContentDialog(items[index].name, items[index].content);
+                                },
+                              ),
+                            );
+                          },
                         ),
                       ),
-                      Expanded(
-                        child: RefreshIndicator(
-                          onRefresh: fetchDataFromFirestore,
-                          child: ListView.builder(
-                            padding: const EdgeInsets.only(top: 0.0),
-                            itemCount: items.length,
-                            itemBuilder: (context, index) {
-                              return Card(
-                                margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                                elevation: 5.0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12.0),
-                                ),
-                                child: ListTile(
-                                  contentPadding: const EdgeInsets.all(16.0),
-                                  title: Text(
-                                    items[index].name,
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    items[index].content.length > 100
-                                        ? '${items[index].content.substring(0, 100)}...'
-                                        : items[index].content,
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  onTap: () {
-                                    showContentDialog(items[index].name, items[index].content);
-                                  },
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -340,12 +336,25 @@ class _MyHomePageState extends State<MyHomePage> {
                     );
                   }
                 },
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Icon(icon, size: 50.0),
-                    Text(text, style: const TextStyle(fontSize: 14.0)),
-                  ],
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Icon(
+                        icon,
+                        size: 50.0,
+                        color: Colors.blueAccent,
+                      ),
+                      const SizedBox(height: 10.0),
+                      Text(
+                        text,
+                        style: const TextStyle(
+                          fontSize: 15.0,
+                          color: Colors.blueAccent,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
