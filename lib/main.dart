@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -88,7 +89,6 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _showPasswordDialog() async {
     final TextEditingController passwordController = TextEditingController();
     String? adminPassword;
-
 
     try {
       DocumentSnapshot docSnapshot = await _firestore.collection('Passwords').doc('admin_password').get();
@@ -183,126 +183,129 @@ class _MyHomePageState extends State<MyHomePage> {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/login1.png'),
-            fit: BoxFit.fill,
+      body: SafeArea( // Added SafeArea to avoid notch
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/login1.png'),
+              fit: BoxFit.fill,
+            ),
           ),
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            children: <Widget>[
-              Container(
-                margin: const EdgeInsets.only(top: 1.0, left: 10.0),
-                child: const Text(
-                  'Hello, Guest',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'sans-serif-black',
-                    fontSize: 20.0,
+          child: SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                Container(
+                  margin: const EdgeInsets.only(top: 20.0, left: 20.0), // Adjusted margin for better visibility
+                  child: const Text(
+                    'Hello, Guest',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontFamily: 'sans-serif-black',
+                      fontSize: 24.0, // Adjusted font size for better visibility
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(
-                height: MediaQuery.of(context).size.height - 35.0,
-                child: Column(
-                  children: <Widget>[
-                    Stack(
-                      children: [
-                        SingleChildScrollView(
-                          controller: _scrollController,
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: <Widget>[
-                              buildCard(context, Icons.login, 'Login', LoginPage()),
-                              buildCard(context, Icons.tour, 'Tour', TourPage()),
-                              buildCard(context, Icons.app_registration, 'Register', RegisterPage()),
-                              buildCard(context, Icons.admin_panel_settings, 'Admin', null), // Pass null for admin
-                              buildCard(context, Icons.info, 'About', AboutPage()),
-                            ],
+                SizedBox(
+                  height: MediaQuery.of(context).size.height - 35.0,
+                  child: Column(
+                    children: <Widget>[
+                      Stack(
+                        children: [
+                          SingleChildScrollView(
+                            controller: _scrollController,
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: <Widget>[
+                                buildCard(context, Icons.login, 'Login', LoginPage()),
+                                buildCard(context, Icons.tour, 'Tour', TourPage()),
+                                buildCard(context, Icons.app_registration, 'Register', RegisterPage()),
+                                buildCard(context, Icons.admin_panel_settings, 'Admin', null), // Pass null for admin
+                                buildCard(context, Icons.info, 'About', AboutPage()),
+                              ],
+                            ),
                           ),
-                        ),
-                        Positioned.fill(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              GestureDetector(
-                                behavior: HitTestBehavior.translucent,
-                                onTap: _scrollLeft,
-                                child: Container(
-                                  width: 30.0,
-                                  height: double.infinity,
-                                  color: Colors.transparent, // Invisible area
-                                ),
-                              ),
-                              GestureDetector(
-                                behavior: HitTestBehavior.translucent,
-                                onTap: _scrollRight,
-                                child: Container(
-                                  width: 30.0,
-                                  height: double.infinity,
-                                  color: Colors.transparent, // Invisible area
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      margin: const EdgeInsets.only(top: 40.0, left: 0.0),
-                      child: const Text(
-                        'Announcements',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20.0,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: RefreshIndicator(
-                        onRefresh: fetchDataFromFirestore,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.only(top: 0.0),
-                          itemCount: items.length,
-                          itemBuilder: (context, index) {
-                            return Card(
-                              margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                              elevation: 5.0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12.0),
-                              ),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.all(16.0),
-                                title: Text(
-                                  items[index].name,
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
+                          if (kIsWeb) // Only show invisible buttons on web
+                            Positioned.fill(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  GestureDetector(
+                                    behavior: HitTestBehavior.translucent,
+                                    onTap: _scrollLeft,
+                                    child: Container(
+                                      width: 30.0,
+                                      height: double.infinity,
+                                      color: Colors.transparent,
+                                    ),
                                   ),
-                                ),
-                                subtitle: Text(
-                                  items[index].content.length > 100
-                                      ? '${items[index].content.substring(0, 100)}...'
-                                      : items[index].content,
-                                  style: const TextStyle(fontSize: 16),
-                                ),
-                                onTap: () {
-                                  showContentDialog(items[index].name, items[index].content);
-                                },
+                                  GestureDetector(
+                                    behavior: HitTestBehavior.translucent,
+                                    onTap: _scrollRight,
+                                    child: Container(
+                                      width: 30.0,
+                                      height: double.infinity,
+                                      color: Colors.transparent,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            );
-                          },
+                            ),
+                        ],
+                      ),
+                      Container(
+                        margin: const EdgeInsets.only(top: 40.0, left: 0.0),
+                        child: const Text(
+                          'Announcements',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20.0,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                      Expanded(
+                        child: RefreshIndicator(
+                          onRefresh: fetchDataFromFirestore,
+                          child: ListView.builder(
+                            padding: const EdgeInsets.only(top: 0.0),
+                            itemCount: items.length,
+                            itemBuilder: (context, index) {
+                              return Card(
+                                margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                                elevation: 5.0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.all(16.0),
+                                  title: Text(
+                                    items[index].name,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    items[index].content.length > 100
+                                        ? '${items[index].content.substring(0, 100)}...'
+                                        : items[index].content,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  onTap: () {
+                                    showContentDialog(items[index].name, items[index].content);
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -326,7 +329,7 @@ class _MyHomePageState extends State<MyHomePage> {
             margin: const EdgeInsets.all(1.0),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(22.0),
-              child: GestureDetector(
+              child: InkWell(
                 onTap: () {
                   if (text == 'Admin') {
                     _showPasswordDialog();
@@ -337,22 +340,14 @@ class _MyHomePageState extends State<MyHomePage> {
                     );
                   }
                 },
-                child: Icon(
-                  icon,
-                  size: cardWidth * 0.5,
-                  color: Colors.blue,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Icon(icon, size: 50.0),
+                    Text(text, style: const TextStyle(fontSize: 14.0)),
+                  ],
                 ),
               ),
-            ),
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.only(top: 1.0),
-          child: Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18.0,
             ),
           ),
         ),
