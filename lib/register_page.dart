@@ -103,7 +103,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
       await _firestore.collection('Users').doc(userEmail).set(newUser);
 
-      // Show a dialog upon successful registration
+
       showDialog(
         context: context,
         builder: (BuildContext context) {

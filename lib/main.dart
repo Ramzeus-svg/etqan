@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
 import 'login_page.dart';
-import 'admin_login_page.dart'; // Import AdminLoginPage
+import 'admin_login_page.dart';
 import 'register_page.dart';
 import 'tour_page.dart';
 import 'about_page.dart';
@@ -89,7 +89,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final TextEditingController passwordController = TextEditingController();
     String? adminPassword;
 
-    // Fetch the password from Firestore
+
     try {
       DocumentSnapshot docSnapshot = await _firestore.collection('Passwords').doc('admin_password').get();
       if (docSnapshot.exists) {
@@ -339,8 +339,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
                 child: Icon(
                   icon,
-                  size: cardWidth * 0.5, // Adjust icon size based on card width
-                  color: Colors.blue, // Change the icon color if needed
+                  size: cardWidth * 0.5,
+                  color: Colors.blue,
                 ),
               ),
             ),
