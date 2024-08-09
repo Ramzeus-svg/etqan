@@ -11,6 +11,7 @@ class AdminPage extends StatefulWidget {
 }
 
 class _AdminPageState extends State<AdminPage> {
+  int _selectedIndex = 0;
   String? profilePictureUrl;
   String? adminName;
   final TextEditingController _courseNameController = TextEditingController();
@@ -45,7 +46,7 @@ class _AdminPageState extends State<AdminPage> {
               profilePictureUrl = await FirebaseStorage.instance.ref(profilePicturePath).getDownloadURL();
             }
 
-            adminName = data['name'] as String? ?? 'Unknown Admin'; // Provide default value if name is missing
+            adminName = data['name']?.split(' ')?.first ?? 'Unknown Admin';
           } else {
             print('No data found for admin email: $adminEmail');
           }
@@ -153,76 +154,79 @@ class _AdminPageState extends State<AdminPage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Payment confirmed')));
   }
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    List<Widget> _pages = [
+      Scaffold(
+        body: Padding(
+          padding: EdgeInsets.all(4.0),
+          child: Column(
+            children: [
+              // Admin Greeting and Picture
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    profilePictureUrl != null
+                        ? CircleAvatar(
+                      radius: 40,
+                      backgroundImage: NetworkImage(profilePictureUrl!),
+                    )
+                        : CircularProgressIndicator(),
+                    SizedBox(width: 16),
+                    Text(
+                      adminName != null ? 'Hi, Dr $adminName' : 'Loading...',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: GridView.count(
+                  crossAxisCount: 2, // Number of columns
+                  crossAxisSpacing: 4,
+                  mainAxisSpacing: 4,
+                  children: [
+                    _buildIconTile(Icons.person, 'Profile', _buildProfileSection),
+                    _buildIconTile(Icons.book, 'Courses', _buildCoursesSection),
+                    _buildIconTile(Icons.announcement, 'Announcements', _buildAnnouncementsSection),
+                    _buildIconTile(Icons.edit, 'Users', _buildUsersSection),
+                    _buildIconTile(Icons.grade, 'Grades', _buildGradesSection),
+                    _buildIconTile(Icons.payment, 'Payments', _buildPaymentsSection),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      Scaffold(
+        body: Center(child: Text('Settings Page')),
+      ),
+    ];
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Admin Panel'),
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.blue,
-              ),
-              child: Row(
-                children: [
-                  profilePictureUrl != null
-                      ? CircleAvatar(
-                    radius: 30,
-                    backgroundImage: NetworkImage(profilePictureUrl!),
-                  )
-                      : CircularProgressIndicator(),
-                  SizedBox(width: 16),
-                  Text(
-                    adminName != null ? 'Hi, Dr $adminName' : 'Loading...',
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: Icon(Icons.settings),
-              title: Text('Settings'),
-              onTap: () {
-                // Navigate to settings page
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.logout),
-              title: Text('Logout'),
-              onTap: () {
-                // Implement logout functionality
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.roundabout_left),
-              title: Text('About'),
-              onTap: () {
-                // Implement about functionality
-              },
-            ),
-          ],
-        ),
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(4.0),
-        child: GridView.count(
-          crossAxisCount: 4, // Number of columns
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-          children: [
-            _buildIconTile(Icons.person, 'Profile', _buildProfileSection),
-            _buildIconTile(Icons.book, 'Courses', _buildCoursesSection),
-            _buildIconTile(Icons.payment, 'Add Courses', _buildPaymentsSection),
-            _buildIconTile(Icons.announcement, 'Announcements', _buildAnnouncementsSection),
-            _buildIconTile(Icons.edit, 'Users', _buildUsersSection),
-            _buildIconTile(Icons.grade, 'Grades', _buildGradesSection),
-            _buildIconTile(Icons.payment, 'Payments', _buildPaymentsSection),
-          ],
-        ),
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Main',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.blue,
+        onTap: _onItemTapped,
       ),
     );
   }
@@ -243,9 +247,23 @@ class _AdminPageState extends State<AdminPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 50),
-            SizedBox(height: 10),
-            Text(title, style: TextStyle(fontSize: 16)),
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+              ),
+              padding: EdgeInsets.all(16),
+              child: Icon(
+                icon,
+                size: 40,
+                color: Colors.blue,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(fontSize: 16),
+            ),
           ],
         ),
       ),
@@ -258,16 +276,7 @@ class _AdminPageState extends State<AdminPage> {
         title: Text('Profile'),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            profilePictureUrl != null
-                ? Image.network(profilePictureUrl!, width: 150, height: 150)
-                : CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text(adminName != null ? adminName! : 'Loading...', style: TextStyle(fontSize: 24)),
-          ],
-        ),
+        child: Text('Profile Section'),
       ),
     );
   }
@@ -277,19 +286,28 @@ class _AdminPageState extends State<AdminPage> {
       appBar: AppBar(
         title: Text('Courses'),
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
+      body: Center(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(controller: _courseNameController, decoration: InputDecoration(labelText: 'Course Name')),
-            TextField(controller: _courseOverviewController, decoration: InputDecoration(labelText: 'Overview')),
-            SizedBox(height: 8),
+            TextField(
+              controller: _courseNameController,
+              decoration: InputDecoration(labelText: 'Course Name'),
+            ),
+            TextField(
+              controller: _courseOverviewController,
+              decoration: InputDecoration(labelText: 'Course Overview'),
+            ),
+            ElevatedButton(
+              onPressed: _pickCourseImage,
+              child: Text('Pick Course Image'),
+            ),
             _courseImageUrl != null
                 ? Image.network(_courseImageUrl!)
-                : ElevatedButton(onPressed: _pickCourseImage, child: Text('Pick Image')),
-            SizedBox(height: 16),
-            ElevatedButton(onPressed: _addCourse, child: Text('Add Course')),
+                : Container(),
+            ElevatedButton(
+              onPressed: _addCourse,
+              child: Text('Add Course'),
+            ),
           ],
         ),
       ),
@@ -301,15 +319,21 @@ class _AdminPageState extends State<AdminPage> {
       appBar: AppBar(
         title: Text('Announcements'),
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
+      body: Center(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(controller: _announcementController, decoration: InputDecoration(labelText: 'Announcement Name')),
-            TextField(controller: _announcementContentController, decoration: InputDecoration(labelText: 'Content')),
-            SizedBox(height: 16),
-            ElevatedButton(onPressed: _addAnnouncement, child: Text('Add Announcement')),
+            TextField(
+              controller: _announcementController,
+              decoration: InputDecoration(labelText: 'Announcement Name'),
+            ),
+            TextField(
+              controller: _announcementContentController,
+              decoration: InputDecoration(labelText: 'Announcement Content'),
+            ),
+            ElevatedButton(
+              onPressed: _addAnnouncement,
+              child: Text('Add Announcement'),
+            ),
           ],
         ),
       ),
@@ -317,37 +341,76 @@ class _AdminPageState extends State<AdminPage> {
   }
 
   Widget _buildUsersSection() {
-    // Implement users section UI and logic here
     return Scaffold(
       appBar: AppBar(
         title: Text('Users'),
       ),
       body: Center(
-        child: Text('Users Section'),
+        child: Column(
+          children: [
+            TextField(
+              controller: _userNameController,
+              decoration: InputDecoration(labelText: 'User Name'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Update user information with a specific user ID
+                _updateUser('userId');
+              },
+              child: Text('Update User Information'),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildGradesSection() {
-    // Implement grades section UI and logic here
     return Scaffold(
       appBar: AppBar(
         title: Text('Grades'),
       ),
       body: Center(
-        child: Text('Grades Section'),
+        child: Column(
+          children: [
+            TextField(
+              controller: _gradeController,
+              decoration: InputDecoration(labelText: 'Grade'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Add grade for a specific student ID
+                _addGrade('studentId');
+              },
+              child: Text('Add Grade'),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildPaymentsSection() {
-    // Implement payments section UI and logic here
     return Scaffold(
       appBar: AppBar(
         title: Text('Payments'),
       ),
       body: Center(
-        child: Text('Payments Section'),
+        child: Column(
+          children: [
+            TextField(
+              controller: _paymentIdController,
+              decoration: InputDecoration(labelText: 'Payment ID'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Confirm payment with a specific payment ID
+                _confirmPayment('paymentId');
+              },
+              child: Text('Confirm Payment'),
+            ),
+          ],
+        ),
       ),
     );
   }

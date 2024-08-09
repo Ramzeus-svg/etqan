@@ -175,15 +175,6 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Align(
-                alignment: Alignment.topLeft,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.grey),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              ),
               SizedBox(height: screenHeight * 0.03),
               Image.asset(
                 'assets/etqan.png',

@@ -19,6 +19,8 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   bool _rememberMe = false;
   bool _showPassword = false;
 
+  get screenWidth => null;
+
   @override
   void initState() {
     super.initState();
@@ -181,38 +183,32 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenHeight = MediaQuery.of(context).size.height;
+    final double screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
-      appBar: AppBar(
-        leading: BackButton(
-          color: Colors.grey,
-        ),
-        backgroundColor: Color(0xFF03141C),
-        elevation: 60,
-      ),
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: const AssetImage('assets/login1.png'), // Background image
-                  fit: BoxFit.cover,
-                  colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.5), BlendMode.darken),
-                ),
-              ),
-            ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: const AssetImage('assets/login1.png'), // Background image
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.5), BlendMode.darken),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  'assets/etqan.png', // Logo image
-                  width: 150,
-                  height: 150,
-                ),
-                const SizedBox(height: 30),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.08),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(height: screenHeight * 0.03),
+              Image.asset(
+                'assets/etqan.png',
+                width: screenWidth * 0.4, // Adjusted width for responsiveness
+                height: screenWidth * 0.4, // Adjusted height to maintain aspect ratio
+              ),
+              SizedBox(height: screenHeight * 0.04),
                 const Text(
                   'Welcome to Etqan Center Admin',
                   style: TextStyle(
@@ -221,8 +217,9 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: screenHeight * 0.04),
                 TextField(
                   controller: _emailController,
                   decoration: InputDecoration(
@@ -332,7 +329,6 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
               ],
             ),
           ),
-        ],
       ),
     );
   }
