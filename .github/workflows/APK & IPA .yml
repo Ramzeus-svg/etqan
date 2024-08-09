@@ -23,6 +23,8 @@ jobs:
           flutter-version: '3.24.0'
       - run: flutter pub get
       - run: flutter build apk --debug --split-per-abi
+      - run: pod repo update
+        working-directory: ios
       - run: |
           flutter build ios --no-codesign
           cd build/ios/iphoneos
