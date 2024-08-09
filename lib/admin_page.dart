@@ -162,6 +162,10 @@ class _AdminPageState extends State<AdminPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Get screen dimensions
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
     List<Widget> _pages = [
       Scaffold(
         body: Padding(
@@ -174,15 +178,18 @@ class _AdminPageState extends State<AdminPage> {
                 children: [
                   profilePictureUrl != null
                       ? CircleAvatar(
-                    radius: 40,
+                    radius: screenWidth * 0.1, // Adjust based on screen width
                     backgroundImage: NetworkImage(profilePictureUrl!),
                   )
                       : CircularProgressIndicator(),
-                  SizedBox(width: 16),
+                  SizedBox(height: screenHeight * 0.03),
                   Expanded(
                     child: Text(
-                      adminName != null ? 'Hi, Dr $adminName' : 'Loading...',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      adminName != null ? 'Hello, Dr. $adminName' : 'Loading...',
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.06, // Adjust based on screen width
+                        fontWeight: FontWeight.bold,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -191,7 +198,7 @@ class _AdminPageState extends State<AdminPage> {
               SizedBox(height: 16),
               Expanded(
                 child: GridView.count(
-                  crossAxisCount: 2,
+                  crossAxisCount: (screenWidth / 200).floor(), // Adjust number of columns based on screen width
                   crossAxisSpacing: 8,
                   mainAxisSpacing: 8,
                   children: [
@@ -234,6 +241,8 @@ class _AdminPageState extends State<AdminPage> {
   }
 
   Widget _buildIconTile(IconData icon, String title, Widget Function() page) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -257,14 +266,14 @@ class _AdminPageState extends State<AdminPage> {
               padding: EdgeInsets.all(16),
               child: Icon(
                 icon,
-                size: 40,
+                size: screenWidth * 0.1, // Adjust based on screen width
                 color: Colors.blue,
               ),
             ),
             SizedBox(height: 8),
             Text(
               title,
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: screenWidth * 0.04), // Adjust based on screen width
               textAlign: TextAlign.center,
             ),
           ],
