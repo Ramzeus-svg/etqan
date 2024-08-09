@@ -165,33 +165,35 @@ class _AdminPageState extends State<AdminPage> {
     List<Widget> _pages = [
       Scaffold(
         body: Padding(
-          padding: EdgeInsets.all(4.0),
+          padding: EdgeInsets.all(16.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Admin Greeting and Picture
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  children: [
-                    profilePictureUrl != null
-                        ? CircleAvatar(
-                      radius: 40,
-                      backgroundImage: NetworkImage(profilePictureUrl!),
-                    )
-                        : CircularProgressIndicator(),
-                    SizedBox(width: 16),
-                    Text(
+              Row(
+                children: [
+                  profilePictureUrl != null
+                      ? CircleAvatar(
+                    radius: 40,
+                    backgroundImage: NetworkImage(profilePictureUrl!),
+                  )
+                      : CircularProgressIndicator(),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
                       adminName != null ? 'Hi, Dr $adminName' : 'Loading...',
                       style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+              SizedBox(height: 16),
               Expanded(
                 child: GridView.count(
-                  crossAxisCount: 2, // Number of columns
-                  crossAxisSpacing: 4,
-                  mainAxisSpacing: 4,
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
                   children: [
                     _buildIconTile(Icons.person, 'Profile', _buildProfileSection),
                     _buildIconTile(Icons.book, 'Courses', _buildCoursesSection),
@@ -263,6 +265,7 @@ class _AdminPageState extends State<AdminPage> {
             Text(
               title,
               style: TextStyle(fontSize: 16),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -286,24 +289,30 @@ class _AdminPageState extends State<AdminPage> {
       appBar: AppBar(
         title: Text('Courses'),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
               controller: _courseNameController,
               decoration: InputDecoration(labelText: 'Course Name'),
             ),
+            SizedBox(height: 8),
             TextField(
               controller: _courseOverviewController,
               decoration: InputDecoration(labelText: 'Course Overview'),
             ),
+            SizedBox(height: 8),
             ElevatedButton(
               onPressed: _pickCourseImage,
               child: Text('Pick Course Image'),
             ),
+            SizedBox(height: 8),
             _courseImageUrl != null
                 ? Image.network(_courseImageUrl!)
                 : Container(),
+            SizedBox(height: 8),
             ElevatedButton(
               onPressed: _addCourse,
               child: Text('Add Course'),
@@ -319,17 +328,21 @@ class _AdminPageState extends State<AdminPage> {
       appBar: AppBar(
         title: Text('Announcements'),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
               controller: _announcementController,
               decoration: InputDecoration(labelText: 'Announcement Name'),
             ),
+            SizedBox(height: 8),
             TextField(
               controller: _announcementContentController,
               decoration: InputDecoration(labelText: 'Announcement Content'),
             ),
+            SizedBox(height: 8),
             ElevatedButton(
               onPressed: _addAnnouncement,
               child: Text('Add Announcement'),
@@ -345,13 +358,16 @@ class _AdminPageState extends State<AdminPage> {
       appBar: AppBar(
         title: Text('Users'),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
               controller: _userNameController,
               decoration: InputDecoration(labelText: 'User Name'),
             ),
+            SizedBox(height: 8),
             ElevatedButton(
               onPressed: () {
                 // Update user information with a specific user ID
@@ -370,13 +386,16 @@ class _AdminPageState extends State<AdminPage> {
       appBar: AppBar(
         title: Text('Grades'),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
               controller: _gradeController,
               decoration: InputDecoration(labelText: 'Grade'),
             ),
+            SizedBox(height: 8),
             ElevatedButton(
               onPressed: () {
                 // Add grade for a specific student ID
@@ -395,13 +414,16 @@ class _AdminPageState extends State<AdminPage> {
       appBar: AppBar(
         title: Text('Payments'),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
               controller: _paymentIdController,
               decoration: InputDecoration(labelText: 'Payment ID'),
             ),
+            SizedBox(height: 8),
             ElevatedButton(
               onPressed: () {
                 // Confirm payment with a specific payment ID
