@@ -25,7 +25,7 @@ jobs:
         with:
           flutter-version: '3.24.0'
       - run: flutter pub get
-      - run: flutter build apk --debug --split-per-abi
+      - run: flutter build apk --release 
       - run: pod repo update
         working-directory: ios
       - run: |
@@ -35,10 +35,10 @@ jobs:
           cd Payload
           ln -s ../Runner.app
           cd ..
-          zip -r app.ipa Payload
+          zip -r Etqan.ipa Payload
       - name: Push to Releases
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "build/app/outputs/apk/debug/*,build/ios/iphoneos/app.ipa"
+          artifacts: "build/app/outputs/apk/debug/*,build/ios/iphoneos/Etqan.ipa"
           tag: v1.0.${{ github.run_number }}
           token: ${{ secrets.GITHUB_TOKEN }}
