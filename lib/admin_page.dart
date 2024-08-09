@@ -182,7 +182,7 @@ class _AdminPageState extends State<AdminPage> {
                     backgroundImage: NetworkImage(profilePictureUrl!),
                   )
                       : CircularProgressIndicator(),
-                  SizedBox(height: screenHeight * 0.03),
+                  SizedBox(height: screenHeight * 0.1),
                   Expanded(
                     child: Text(
                       adminName != null ? 'Hello, Dr. $adminName' : 'Loading...',
