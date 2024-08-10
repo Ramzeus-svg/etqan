@@ -264,7 +264,7 @@ class _UserPageState extends State<UserPage> {
         vertical: isSmallScreen ? 30 : 50,
       ),
       decoration: const BoxDecoration(
-        color: Color(0xFF5E35B1), // Purple background
+        color: Color(0xFF160E30), // Purple background
         borderRadius: BorderRadius.vertical(
           bottom: Radius.circular(30),
         ),
@@ -391,7 +391,7 @@ class _UserPageState extends State<UserPage> {
           Container(
             padding: EdgeInsets.all(isSmallScreen ? 10 : 15),
             decoration: BoxDecoration(
-              color: Color(0xFF5E35B1), // Purple background
+              color: Color(0xFF160E30), // Purple background
               borderRadius: BorderRadius.circular(15),
             ),
             child: Icon(
