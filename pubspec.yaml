@@ -33,10 +33,10 @@ dev_dependencies:
 
 
 flutter_native_splash:
-    color: "#E2E5EA"
-    image: "assets/etqan.png"
-    color_dark: "#010101"
-    image_dark: "assets/etqan.png"
+  color: "#E2E5EA"
+  image: "assets/etqan.png"
+  color_dark: "#010101"
+  image_dark: "assets/etqan.png"
 
 
 flutter:
