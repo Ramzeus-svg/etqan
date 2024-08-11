@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore package
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'register_admin_page.dart';
 import 'admin_page.dart';
@@ -19,8 +19,6 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   bool _rememberMe = false;
   bool _showPassword = false;
 
-  get screenWidth => null;
-
   @override
   void initState() {
     super.initState();
@@ -35,7 +33,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
       if (email != null) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => AdminPage()), // Navigate to AdminPage
+          MaterialPageRoute(builder: (context) => AdminPage(email: email)), // Pass the email
         );
       } else {
         _loadSavedCredentials();
@@ -74,7 +72,6 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         password: password,
       );
 
-      // Check if the user is an admin
       DocumentSnapshot adminSnapshot = await FirebaseFirestore.instance.collection('Admins').doc(email).get();
       if (adminSnapshot.exists) {
         print('Admin logged in: ${userCredential.user?.email}');
@@ -113,7 +110,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => AdminPage(), // Navigate to AdminPage
+        builder: (context) => AdminPage(email: email), // Pass the email
       ),
     );
   }
@@ -205,130 +202,126 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
               SizedBox(height: screenHeight * 0.03),
               Image.asset(
                 'assets/etqan.png',
-                width: screenWidth * 0.4, // Adjusted width for responsiveness
-                height: screenWidth * 0.4, // Adjusted height to maintain aspect ratio
+                width: screenWidth * 0.4,
+                height: screenWidth * 0.4,
               ),
               SizedBox(height: screenHeight * 0.04),
-                const Text(
-                  'Welcome to Etqan Center Admin',
-                  style: TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontSize: 28,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
+              const Text(
+                'Welcome to Etqan Center Admin',
+                style: TextStyle(
+                  fontFamily: 'Montserrat',
+                  fontSize: 28,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
-                SizedBox(height: screenHeight * 0.04),
-                TextField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    hintText: 'Email',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    hintStyle: const TextStyle(color: Colors.grey),
-                    prefixIcon: const Icon(Icons.email, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: screenHeight * 0.04),
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  hintText: 'Email',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
                   ),
-                  keyboardType: TextInputType.emailAddress,
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  prefixIcon: const Icon(Icons.email, color: Colors.grey),
                 ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                    hintText: 'Password',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    hintStyle: const TextStyle(color: Colors.grey),
-                    prefixIcon: const Icon(Icons.lock, color: Colors.grey),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _showPassword ? Icons.visibility : Icons.visibility_off,
-                        color: Colors.grey,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _showPassword = !_showPassword;
-                        });
-                      },
-                    ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _passwordController,
+                decoration: InputDecoration(
+                  hintText: 'Password',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
                   ),
-                  obscureText: !_showPassword,
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Checkbox(
-                      value: _rememberMe,
-                      onChanged: (bool? value) {
-                        setState(() {
-                          _rememberMe = value ?? false;
-                        });
-                      },
-                      activeColor: Colors.blue,
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  prefixIcon: const Icon(Icons.lock, color: Colors.grey),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _showPassword ? Icons.visibility : Icons.visibility_off,
+                      color: Colors.grey,
                     ),
-                    const Text(
-                      'Remember Me',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
-                  ),
-                  onPressed: _loginUser,
-                  child: const Text(
-                    'Login',
-                    style: TextStyle(fontSize: 18),
+                    onPressed: () {
+                      setState(() {
+                        _showPassword = !_showPassword;
+                      });
+                    },
                   ),
                 ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                obscureText: !_showPassword,
+              ),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Checkbox(
+                    value: _rememberMe,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        _rememberMe = value ?? false;
+                      });
+                    },
+                    activeColor: Colors.blue,
                   ),
-                  onPressed: _registerUser,
-                  child: const Text(
-                    'Register',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                TextButton(
-                  onPressed: _showForgotPasswordDialog,
-                  child: const Text(
-                    'Forgot Password?',
+                  const Text(
+                    'Remember Me',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,
-                      decoration: TextDecoration.underline,
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
                 ),
-              ],
-            ),
+                onPressed: _loginUser,
+                child: const Text(
+                  'Login',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                ),
+                onPressed: _registerUser,
+                child: const Text(
+                  'Register',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextButton(
+                onPressed: _showForgotPasswordDialog,
+                child: const Text(
+                  'Forgot Password?',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ),
+            ],
           ),
+        ),
       ),
     );
   }

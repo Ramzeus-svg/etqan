@@ -1,448 +1,568 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
+import 'bottom_bar_admin.dart';
+import 'admin_login_page.dart';
 
 class AdminPage extends StatefulWidget {
+  final String email;
+
+  const AdminPage({super.key, required this.email});
+
   @override
   _AdminPageState createState() => _AdminPageState();
 }
 
-class _AdminPageState extends State<AdminPage> {
+class _AdminPageState extends State<AdminPage> with SingleTickerProviderStateMixin {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+
+  String _userName = 'Loading...';
+  String _adminId = 'Loading...';
+  List<CustomListItem> _items = [];
+  Map<String, String> _courseImages = {};
+  bool _isLoading = true;
   int _selectedIndex = 0;
-  String? profilePictureUrl;
-  String? adminName;
-  final TextEditingController _courseNameController = TextEditingController();
-  final TextEditingController _courseOverviewController = TextEditingController();
-  final TextEditingController _announcementController = TextEditingController();
-  final TextEditingController _announcementContentController = TextEditingController();
-  final TextEditingController _userNameController = TextEditingController();
-  final TextEditingController _gradeController = TextEditingController();
-  final TextEditingController _paymentIdController = TextEditingController();
-  String? _courseImageUrl;
-  final ImagePicker _picker = ImagePicker();
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    loadAdminData();
+    _tabController = TabController(length: 3, vsync: this);
+    _initializeData();
+    _activateAppCheck();
   }
 
-  Future<void> loadAdminData() async {
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initializeData() async {
+    setState(() => _isLoading = true);
     try {
-      User? user = FirebaseAuth.instance.currentUser;
+      await Future.wait([
+        _fetchAdminData(widget.email),
+        _fetchCoursesFromFirestore(),
+        _fetchCourseImagesFromStorage(),
+      ]);
+    } catch (e) {
+      print('Error initializing data: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
-      if (user != null) {
-        String adminEmail = user.email!;
-        var adminDoc = await FirebaseFirestore.instance.collection('Admins').doc(adminEmail).get();
+  Future<void> _activateAppCheck() async {
+    try {
+      await FirebaseAppCheck.instance.activate(
+        androidProvider: AndroidProvider.playIntegrity,
+        appleProvider: AppleProvider.deviceCheck,
+      );
+    } catch (e) {
+      print('Error activating Firebase App Check: $e');
+    }
+  }
 
-        if (adminDoc.exists) {
-          Map<String, dynamic>? data = adminDoc.data();
-          if (data != null) {
-            String? profilePicturePath = data['profilePicturePath'] as String?;
-            if (profilePicturePath != null && profilePicturePath.isNotEmpty) {
-              profilePictureUrl = await FirebaseStorage.instance.ref(profilePicturePath).getDownloadURL();
-            }
+  Future<void> _fetchAdminData(String email) async {
+    try {
+      final DocumentSnapshot doc = await _firestore.collection('Admins').doc(email).get();
 
-            adminName = data['name']?.split(' ')?.first ?? 'Unknown Admin';
-          } else {
-            print('No data found for admin email: $adminEmail');
-          }
-        } else {
-          print('No document found for admin email: $adminEmail');
-        }
+      if (doc.exists) {
+        final String name = doc['name'] ?? '';
+        final String adminId = doc['adminID'] ?? '';
+        setState(() {
+          _userName = _getFirstName(name);
+          _adminId = adminId;
+        });
       } else {
-        print('No user is currently logged in.');
+        print('Admin document not found for email: $email');
+        setState(() {
+          _userName = 'Admin not found';
+          _adminId = 'N/A';
+        });
       }
     } catch (e) {
-      print('Error loading admin data: $e');
-    } finally {
-      setState(() {});
-    }
-  }
-
-  Future<void> _pickCourseImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      String fileName = pickedFile.name;
-      File file = File(pickedFile.path);
-      UploadTask uploadTask = FirebaseStorage.instance.ref('course_images/$fileName').putFile(file);
-      TaskSnapshot taskSnapshot = await uploadTask;
-      _courseImageUrl = await taskSnapshot.ref.getDownloadURL();
-      setState(() {});
-    }
-  }
-
-  Future<void> _addCourse() async {
-    String courseName = _courseNameController.text.trim();
-    String courseOverview = _courseOverviewController.text.trim();
-
-    if (courseName.isNotEmpty && courseOverview.isNotEmpty && _courseImageUrl != null) {
-      await FirebaseFirestore.instance.collection('Courses').add({
-        'name': courseName,
-        'overview': courseOverview,
-        'imageUrl': _courseImageUrl,
-      });
-
-      _courseNameController.clear();
-      _courseOverviewController.clear();
+      print('Error fetching admin data for email $email: $e');
       setState(() {
-        _courseImageUrl = null;
+        _userName = 'Error';
+        _adminId = 'N/A';
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Course added successfully!')));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill all fields and pick an image')));
     }
   }
 
-  Future<void> _addAnnouncement() async {
-    String announcementName = _announcementController.text.trim();
-    String announcementContent = _announcementContentController.text.trim();
-
-    if (announcementName.isNotEmpty && announcementContent.isNotEmpty) {
-      await FirebaseFirestore.instance.collection('Announcements').add({
-        'Name': announcementName,
-        'Content': announcementContent,
+  Future<void> _fetchCoursesFromFirestore() async {
+    try {
+      final QuerySnapshot querySnapshot = await _firestore.collection('Courses').get();
+      final List<CustomListItem> fetchedItems = querySnapshot.docs.map((doc) {
+        return CustomListItem(
+          name: doc['name'] ?? 'Unknown',
+          content: '', // Assuming no content needed for courses
+        );
+      }).toList();
+      setState(() {
+        _items = fetchedItems;
       });
-
-      _announcementController.clear();
-      _announcementContentController.clear();
-
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Announcement added')));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill all fields')));
+    } catch (e) {
+      print('Error fetching courses from Firestore: $e');
     }
   }
 
-  Future<void> _updateUser(String userId) async {
-    String userName = _userNameController.text.trim();
+  Future<void> _fetchCourseImagesFromStorage() async {
+    try {
+      final QuerySnapshot courseQuerySnapshot = await _firestore.collection('Courses').get();
+      final Map<String, String> imageUrls = {};
 
-    if (userName.isNotEmpty) {
-      await FirebaseFirestore.instance.collection('Users').doc(userId).update({
-        'name': userName,
+      for (var courseDoc in courseQuerySnapshot.docs) {
+        final String courseName = courseDoc['name'] ?? '';
+        if (courseName.isNotEmpty) {
+          try {
+            final String courseImagePath = 'courses/$courseName/$courseName.png';
+            final String courseImageUrl = await _storage.ref(courseImagePath).getDownloadURL();
+            imageUrls[courseName] = courseImageUrl;
+          } catch (e) {
+            print('Error fetching image URL for $courseName: $e');
+            imageUrls[courseName] = 'https://example.com/placeholder.png';
+          }
+        }
+      }
+
+      setState(() {
+        _courseImages = imageUrls;
       });
-
-      _userNameController.clear();
-
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User updated successfully')));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please enter a name')));
+    } catch (e) {
+      print('Error fetching course images: $e');
     }
   }
 
-  Future<void> _addGrade(String studentId) async {
-    String grade = _gradeController.text.trim();
-
-    if (grade.isNotEmpty) {
-      await FirebaseFirestore.instance.collection('Users').doc(studentId).update({
-        'grade': grade,
-      });
-
-      _gradeController.clear();
-
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Grade added successfully')));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please enter a grade')));
-    }
+  String _getFirstName(String fullName) {
+    return fullName.split(' ').firstWhere((part) => part.isNotEmpty, orElse: () => '');
   }
 
-  Future<void> _confirmPayment(String paymentId) async {
-    // Implement payment confirmation logic here
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Payment confirmed')));
+  Future<void> _logout() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const AdminLoginPage()),
+    );
+  }
+
+  void _showOptionsDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          contentPadding: EdgeInsets.zero,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.settings),
+                title: const Text('Settings'),
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: const Text('Logout'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _logout();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+    _tabController.animateTo(index);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Get screen dimensions
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
+    return Scaffold(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : BottomBarAdmin(
+        currentPage: _selectedIndex,
+        tabController: _tabController,
+        colors: [
+          Colors.blue,
+          Colors.red,
+          Colors.green,
+        ],
+        unselectedColor: Colors.grey,
+        barColor: Colors.white,
+        end: 0.0,
+        start: 10.0,
+        onTap: _onItemTapped,
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildMainPage(),
+            _buildAdminActionsPage(),
+            _buildProfilePage(),
+          ],
+        ),
+      ),
+    );
+  }
 
-    List<Widget> _pages = [
-      Scaffold(
-        body: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Admin Greeting and Picture
-              Row(
-                children: [
-                  profilePictureUrl != null
-                      ? CircleAvatar(
-                    radius: screenWidth * 0.1, // Adjust based on screen width
-                    backgroundImage: NetworkImage(profilePictureUrl!),
-                  )
-                      : CircularProgressIndicator(),
-                  SizedBox(height: screenHeight * 0.1),
-                  Expanded(
-                    child: Text(
-                      adminName != null ? 'Hello, Dr. $adminName' : 'Loading...',
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.06, // Adjust based on screen width
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+  Widget _buildMainPage() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          _buildTopSection(isSmallScreen),
+          const SizedBox(height: 20),
+          _buildCategoryButtons(isSmallScreen),
+          const SizedBox(height: 20),
+          _buildTrendingCoursesSection(isSmallScreen),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdminActionsPage() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          _buildAdminActionsSection(isSmallScreen),
+          const SizedBox(height: 20),
+          _buildCourseManagementSection(isSmallScreen),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfilePage() {
+    return Center(
+      child: Text('Profile Page', style: TextStyle(fontSize: 24)),
+    );
+  }
+
+  Widget _buildTopSection(bool isSmallScreen) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: isSmallScreen ? 20 : 40,
+        vertical: isSmallScreen ? 30 : 50,
+      ),
+      decoration: const BoxDecoration(
+        color: Color(0xFF160E30),
+        borderRadius: BorderRadius.vertical(
+          bottom: Radius.circular(30),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildGreetingAndNotificationIcon(isSmallScreen),
+          const SizedBox(height: 20),
+          Text(
+            'Manage your courses here!',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: isSmallScreen ? 24 : 32,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 20),
+          _buildSearchBar(isSmallScreen),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGreetingAndNotificationIcon(bool isSmallScreen) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            CircleAvatar(
+              radius: isSmallScreen ? 25 : 30,
+              backgroundImage: const AssetImage('assets/etqan.png'),
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Hello, Dr.$_userName!',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isSmallScreen ? 18 : 24,
                   ),
-                ],
-              ),
-              SizedBox(height: 16),
-              Expanded(
-                child: GridView.count(
-                  crossAxisCount: (screenWidth / 200).floor(), // Adjust number of columns based on screen width
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  children: [
-                    _buildIconTile(Icons.person, 'Profile', _buildProfileSection),
-                    _buildIconTile(Icons.book, 'Courses', _buildCoursesSection),
-                    _buildIconTile(Icons.announcement, 'Announcements', _buildAnnouncementsSection),
-                    _buildIconTile(Icons.edit, 'Users', _buildUsersSection),
-                    _buildIconTile(Icons.grade, 'Grades', _buildGradesSection),
-                    _buildIconTile(Icons.payment, 'Payments', _buildPaymentsSection),
-                  ],
                 ),
-              ),
+                Text(
+                  'ID: $_adminId',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isSmallScreen ? 12 : 16,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        IconButton(
+          icon: const Icon(Icons.more_vert, color: Colors.white),
+          onPressed: _showOptionsDialog,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSearchBar(bool isSmallScreen) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: 'Search',
+          border: InputBorder.none,
+          suffixIcon: Icon(Icons.search, color: Colors.grey),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryButtons(bool isSmallScreen) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20 : 40),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildCategoryButton('Courses', Icons.book, Colors.blue),
+              _buildCategoryButton('Announcements', Icons.notifications, Colors.red),
+              _buildCategoryButton('Grades', Icons.grade, Colors.green),
             ],
           ),
-        ),
-      ),
-      Scaffold(
-        body: Center(child: Text('Settings Page')),
-      ),
-    ];
-
-    return Scaffold(
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Main',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildCategoryButton('Payments', Icons.payment, Colors.orange),
+              _buildCategoryButton('Users', Icons.people, Colors.purple),
+              _buildCategoryButton('Settings', Icons.settings, Colors.grey),
+            ],
           ),
         ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blue,
-        onTap: _onItemTapped,
       ),
     );
   }
 
-  Widget _buildIconTile(IconData icon, String title, Widget Function() page) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => page()),
-        );
-      },
+  Widget _buildCategoryButton(String label, IconData icon, Color color) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(50),
+          ),
+          child: Icon(icon, size: 30, color: Colors.white),
+        ),
+        const SizedBox(height: 5),
+        Text(label, style: const TextStyle(color: Colors.black)),
+      ],
+    );
+  }
+
+  Widget _buildTrendingCoursesSection(bool isSmallScreen) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20 : 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Trending Courses',
+            style: TextStyle(
+              fontSize: isSmallScreen ? 18 : 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _items.isEmpty
+              ? const Text('No courses found.')
+              : SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: _items.map((item) {
+                return _buildCourseCard(
+                  courseName: item.name,
+                  imageUrl: _courseImages[item.name] ??
+                      'https://example.com/placeholder.png',
+                  isSmallScreen: isSmallScreen,
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCourseCard({
+    required String courseName,
+    required String imageUrl,
+    required bool isSmallScreen,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 10),
       child: Container(
+        width: isSmallScreen ? 150 : 200,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: Colors.blue[100],
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.5),
+              blurRadius: 5,
+              spreadRadius: 1,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              child: Image.network(
+                imageUrl,
+                height: isSmallScreen ? 100 : 150,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded / (loadingProgress.expectedTotalBytes ?? 1)
+                          : null,
+                    ),
+                  );
+                },
               ),
-              padding: EdgeInsets.all(16),
-              child: Icon(
-                icon,
-                size: screenWidth * 0.1, // Adjust based on screen width
-                color: Colors.blue,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Text(
+                courseName,
+                style: TextStyle(
+                  fontSize: isSmallScreen ? 16 : 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-            SizedBox(height: 8),
-            Text(
-              title,
-              style: TextStyle(fontSize: screenWidth * 0.04), // Adjust based on screen width
-              textAlign: TextAlign.center,
-            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildProfileSection() {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Profile'),
-      ),
-      body: Center(
-        child: Text('Profile Section'),
+  Widget _buildAdminActionsSection(bool isSmallScreen) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20 : 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Admin Actions',
+            style: TextStyle(
+              fontSize: isSmallScreen ? 18 : 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _buildAdminActionButton('Add Course', Icons.add, Colors.blue),
+          const SizedBox(height: 10),
+          _buildAdminActionButton('Edit Course', Icons.edit, Colors.green),
+          const SizedBox(height: 10),
+          _buildAdminActionButton('Delete Course', Icons.delete, Colors.red),
+        ],
       ),
     );
   }
 
-  Widget _buildCoursesSection() {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Courses'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _courseNameController,
-              decoration: InputDecoration(labelText: 'Course Name'),
-            ),
-            SizedBox(height: 8),
-            TextField(
-              controller: _courseOverviewController,
-              decoration: InputDecoration(labelText: 'Course Overview'),
-            ),
-            SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: _pickCourseImage,
-              child: Text('Pick Course Image'),
-            ),
-            SizedBox(height: 8),
-            _courseImageUrl != null
-                ? Image.network(_courseImageUrl!)
-                : Container(),
-            SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: _addCourse,
-              child: Text('Add Course'),
-            ),
-          ],
+  Widget _buildAdminActionButton(String label, IconData icon, Color color) {
+    return ElevatedButton.icon(
+      onPressed: () {},
+      icon: Icon(icon, color: Colors.white),
+      label: Text(label, style: const TextStyle(color: Colors.white)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
         ),
       ),
     );
   }
 
-  Widget _buildAnnouncementsSection() {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Announcements'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _announcementController,
-              decoration: InputDecoration(labelText: 'Announcement Name'),
+  Widget _buildCourseManagementSection(bool isSmallScreen) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20 : 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Course Management',
+            style: TextStyle(
+              fontSize: isSmallScreen ? 18 : 24,
+              fontWeight: FontWeight.bold,
             ),
-            SizedBox(height: 8),
-            TextField(
-              controller: _announcementContentController,
-              decoration: InputDecoration(labelText: 'Announcement Content'),
-            ),
-            SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: _addAnnouncement,
-              child: Text('Add Announcement'),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 10),
+          _buildCourseManagementButton('Add New Course'),
+          const SizedBox(height: 10),
+          _buildCourseManagementButton('Edit Existing Courses'),
+        ],
       ),
     );
   }
 
-  Widget _buildUsersSection() {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Users'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _userNameController,
-              decoration: InputDecoration(labelText: 'User Name'),
-            ),
-            SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: () {
-                // Update user information with a specific user ID
-                _updateUser('userId');
-              },
-              child: Text('Update User Information'),
-            ),
-          ],
+  Widget _buildCourseManagementButton(String label) {
+    return ElevatedButton(
+      onPressed: () {},
+      child: Text(label),
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
         ),
       ),
     );
   }
+}
 
-  Widget _buildGradesSection() {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Grades'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _gradeController,
-              decoration: InputDecoration(labelText: 'Grade'),
-            ),
-            SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: () {
-                // Add grade for a specific student ID
-                _addGrade('studentId');
-              },
-              child: Text('Add Grade'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+class CustomListItem {
+  final String name;
+  final String content;
 
-  Widget _buildPaymentsSection() {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Payments'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _paymentIdController,
-              decoration: InputDecoration(labelText: 'Payment ID'),
-            ),
-            SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: () {
-                // Confirm payment with a specific payment ID
-                _confirmPayment('paymentId');
-              },
-              child: Text('Confirm Payment'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  CustomListItem({required this.name, required this.content});
 }
