@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'login_page.dart';
 import 'bottom_bar.dart';
+import 'course_detailed_page.dart'; // Assuming you have this page
 
 class UserPage extends StatefulWidget {
   final String email;
@@ -93,9 +94,13 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
     }
   }
 
-  Future<void> _fetchCoursesFromFirestore() async {
+  Future<void> _fetchCoursesFromFirestore({String? status}) async {
     try {
-      final QuerySnapshot querySnapshot = await _firestore.collection('Courses').get();
+      Query query = _firestore.collection('Courses');
+      if (status != null) {
+        query = query.where('status', isEqualTo: status);
+      }
+      final QuerySnapshot querySnapshot = await query.get();
       final List<CustomListItem> fetchedItems = querySnapshot.docs.map((doc) {
         return CustomListItem(
           name: doc['name'] ?? 'Unknown',
@@ -288,7 +293,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
           children: [
             CircleAvatar(
               radius: isSmallScreen ? 25 : 30,
-              backgroundImage: const AssetImage('assets/avatar.png'),
+              backgroundImage: const AssetImage('assets/etqan.png'),
             ),
             const SizedBox(width: 10),
             Column(
@@ -304,8 +309,8 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                 Text(
                   'ID: $_studentId',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: isSmallScreen ? 12 : 16,
+                    color: Colors.white70,
+                    fontSize: isSmallScreen ? 14 : 18,
                   ),
                 ),
               ],
@@ -313,46 +318,26 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
           ],
         ),
         IconButton(
-          icon: Icon(
-            Icons.notifications,
-            color: Colors.white,
-            size: isSmallScreen ? 30 : 35,
-          ),
-          onPressed: () {
-            // Handle notification icon press
-          },
+          icon: Icon(Icons.notifications, color: Colors.white),
+          onPressed: _showOptionsDialog,
         ),
       ],
     );
   }
 
   Widget _buildSearchBar(bool isSmallScreen) {
-    return TextField(
-      decoration: InputDecoration(
-        hintText: 'Search courses...',
-        hintStyle: TextStyle(
-          color: Colors.white,
-          fontSize: isSmallScreen ? 16 : 20,
-        ),
-        filled: true,
-        fillColor: Colors.white.withOpacity(0.2),
-        contentPadding: EdgeInsets.symmetric(
-          vertical: isSmallScreen ? 10 : 15,
-          horizontal: 20,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
-        ),
-        prefixIcon: Icon(
-          Icons.search,
-          color: Colors.white,
-          size: isSmallScreen ? 24 : 28,
-        ),
-      ),
-      style: TextStyle(
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
         color: Colors.white,
-        fontSize: isSmallScreen ? 16 : 20,
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: TextField(
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          hintText: 'Search Courses',
+          prefixIcon: Icon(Icons.search, color: Colors.grey),
+        ),
       ),
     );
   }
@@ -361,37 +346,55 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildCategoryButton('All', Icons.grid_view, isSmallScreen),
-        _buildCategoryButton('Popular', Icons.star, isSmallScreen),
+        _buildCategoryButton('All', Icons.all_inbox, isSmallScreen),
+        _buildCategoryButton('Popular', Icons.trending_up, isSmallScreen),
         _buildCategoryButton('New', Icons.new_releases, isSmallScreen),
       ],
     );
   }
 
-  Widget _buildCategoryButton(String label, IconData icon, bool isSmallScreen) {
-    return ElevatedButton.icon(
+  Widget _buildCategoryButton(String category, IconData icon, bool isSmallScreen) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blue,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
+        padding: EdgeInsets.symmetric(
+          horizontal: isSmallScreen ? 10 : 20,
+          vertical: isSmallScreen ? 10 : 15,
+        ),
+      ),
       onPressed: () {
         // Handle category button press
+        String? status;
+        if (category == 'Popular') {
+          status = 'trendy'; // You might want to include other statuses like 'popular', 'most purchased'
+        } else if (category == 'New') {
+          status = 'new';
+        }
+        _fetchCoursesFromFirestore(status: status);
       },
-      icon: Icon(icon, size: isSmallScreen ? 20 : 24),
-      label: Text(
-        label,
-        style: TextStyle(fontSize: isSmallScreen ? 16 : 20),
-      ),
-      style: ElevatedButton.styleFrom(
-        padding: EdgeInsets.symmetric(
-          vertical: isSmallScreen ? 10 : 15,
-          horizontal: isSmallScreen ? 15 : 20,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: isSmallScreen ? 16 : 24, color: Colors.white),
+          const SizedBox(width: 8),
+          Text(
+            category,
+            style: TextStyle(
+              fontSize: isSmallScreen ? 14 : 18,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
 
+
   Widget _buildTrendingCoursesSection(bool isSmallScreen) {
-    return Padding(
+    return Container(
       padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20 : 40),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,53 +402,48 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
           Text(
             'Trending Courses',
             style: TextStyle(
-              fontSize: isSmallScreen ? 20 : 28,
+              fontSize: isSmallScreen ? 20 : 24,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 10),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _items.length,
-            itemBuilder: (context, index) {
-              final courseItem = _items[index];
-              final courseImageUrl = _courseImages[courseItem.name] ?? '';
-
-              return _buildCourseListItem(courseItem, courseImageUrl, isSmallScreen);
-            },
-          ),
+          _buildCourseList(isSmallScreen),
         ],
       ),
     );
   }
 
-  Widget _buildCourseListItem(CustomListItem item, String imageUrl, bool isSmallScreen) {
-    return Card(
-      elevation: 4,
-      margin: const EdgeInsets.symmetric(vertical: 10),
-      child: ListTile(
-        contentPadding: EdgeInsets.all(isSmallScreen ? 8 : 16),
-        leading: imageUrl.isNotEmpty
-            ? Image.network(
-          imageUrl,
-          width: isSmallScreen ? 50 : 80,
-          height: isSmallScreen ? 50 : 80,
-          fit: BoxFit.cover,
-        )
-            : null,
-        title: Text(
-          item.name,
-          style: TextStyle(fontSize: isSmallScreen ? 18 : 22),
-        ),
-        subtitle: Text(
-          item.content,
-          style: TextStyle(fontSize: isSmallScreen ? 14 : 18),
-        ),
-        onTap: () {
-          // Handle course item tap
-        },
-      ),
+  Widget _buildCourseList(bool isSmallScreen) {
+    return ListView.builder(
+      shrinkWrap: true,
+      itemCount: _items.length,
+      itemBuilder: (context, index) {
+        final item = _items[index];
+        final imageUrl = _courseImages[item.name] ?? 'https://example.com/placeholder.png';
+
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CourseDetailedPage(courseName: item.name, courseDescription: '', courseImageUrl: '', courseImage: '', imageUrl: '',),
+              ),
+            );
+          },
+          child: Card(
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: ListTile(
+              contentPadding: EdgeInsets.all(10),
+              leading: Image.network(imageUrl, fit: BoxFit.cover),
+              title: Text(item.name),
+              subtitle: Text(item.content),
+            ),
+          ),
+        );
+      },
     );
   }
 }

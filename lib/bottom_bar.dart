@@ -116,8 +116,8 @@ class _BottomBarState extends State<BottomBar>
           child: AnimatedContainer(
             duration: Duration(milliseconds: 300),
             curve: Curves.easeIn,
-            width: isOnTop == true ? 0 : 40,
-            height: isOnTop == true ? 0 : 40,
+            width: isOnTop ? 0 : 40,
+            height: isOnTop ? 0 : 40,
             decoration: BoxDecoration(
               color: widget.barColor,
               shape: BoxShape.circle,
@@ -219,30 +219,6 @@ class _BottomBarState extends State<BottomBar>
                             Icons.add,
                             color: widget.currentPage == 2
                                 ? widget.colors[2]
-                                : widget.unselectedColor,
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        height: 55,
-                        width: 40,
-                        child: Center(
-                          child: Icon(
-                            Icons.favorite,
-                            color: widget.currentPage == 3
-                                ? widget.colors[3]
-                                : widget.unselectedColor,
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        height: 55,
-                        width: 40,
-                        child: Center(
-                          child: Icon(
-                            Icons.settings,
-                            color: widget.currentPage == 4
-                                ? widget.colors[4]
                                 : widget.unselectedColor,
                           ),
                         ),
