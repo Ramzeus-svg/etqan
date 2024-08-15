@@ -41,6 +41,8 @@ android {
 // Apply Kotlin plugin with version
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation 'com.google.firebase:firebase-messaging'
+    implementation platform('com.google.firebase:firebase-bom:latest_version')
     // Add other dependencies here
 }
 

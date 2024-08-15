@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
@@ -12,6 +13,13 @@ import 'register_page.dart';
 import 'tour_page.dart';
 import 'about_page.dart';
 import 'user_page.dart';
+
+// Background message handler
+Future<void> _backgroundMessageHandler(RemoteMessage message) async {
+  // Handle background messages
+  print("Handling a background message: ${message.messageId}");
+  // Optionally, show a notification here
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +31,9 @@ void main() async {
         options: DefaultFirebaseOptions.currentPlatform,
       );
     }
+
+    // Initialize Firebase Messaging
+    FirebaseMessaging.onBackgroundMessage(_backgroundMessageHandler);
 
     runApp(MyApp(homePage: await getInitialPage()));
   } catch (e) {
@@ -64,6 +75,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   List<CustomListItem> items = [];
   final ScrollController _scrollController = ScrollController();
 
@@ -71,6 +83,8 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     fetchDataFromFirestore();
+    _requestPermissions();
+    _configureFirebaseMessaging();
   }
 
   Future<void> fetchDataFromFirestore() async {
@@ -176,6 +190,28 @@ class _MyHomePageState extends State<MyHomePage> {
       duration: const Duration(milliseconds: 300),
       curve: Curves.ease,
     );
+  }
+
+  void _requestPermissions() {
+    _firebaseMessaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+  }
+
+  void _configureFirebaseMessaging() {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (message.notification != null) {
+        print("Message notification: ${message.notification!.title}");
+        // Optionally, show a notification here
+      }
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      print("Message clicked! ${message.messageId}");
+      // Handle navigation if necessary
+    });
   }
 
   @override
