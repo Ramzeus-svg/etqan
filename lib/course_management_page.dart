@@ -9,7 +9,6 @@ import 'package:image_picker/image_picker.dart';
 class CourseManagementPage extends StatefulWidget {
   const CourseManagementPage({Key? key}) : super(key: key);
 
-
   @override
   _CourseManagementPageState createState() => _CourseManagementPageState();
 }
@@ -185,10 +184,24 @@ class _CourseManagementPageState extends State<CourseManagementPage> {
             ),
             ElevatedButton(
               onPressed: () async {
-                if (_selectedImage == null) {
-                  print('No image selected.');
+                if (_nameController.text.isEmpty ||
+                    _descriptionController.text.isEmpty ||
+                    _statusController.text.isEmpty ||
+                    _durationController.text.isEmpty ||
+                    _totalStudentsController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: const Text('Please fill in all fields.')),
+                  );
                   return;
                 }
+
+                if (_selectedImage == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: const Text('Please select an image.')),
+                  );
+                  return;
+                }
+
                 setState(() {
                   _isUploading = true;
                 });
@@ -366,43 +379,43 @@ class _CourseManagementPageState extends State<CourseManagementPage> {
             ),
             ElevatedButton(
               onPressed: () async {
-                if (_selectedImage != null) {
-                  setState(() {
-                    _isUploading = true;
-                  });
-                  await _updateCourse(
-                    course.id,
-                    _nameController.text,
-                    _descriptionController.text,
-                    _statusController.text,
-                    _durationController.text,
-                    int.tryParse(_totalStudentsController.text) ?? 0,
-                    _selectedImage!,
-                        (progress) {
-                      setState(() {
-                        _uploadProgress = progress;
-                      });
-                    },
+                if (_nameController.text.isEmpty ||
+                    _descriptionController.text.isEmpty ||
+                    _statusController.text.isEmpty ||
+                    _durationController.text.isEmpty ||
+                    _totalStudentsController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: const Text('Please fill in all fields.')),
                   );
-                  setState(() {
-                    _isUploading = false;
-                  });
-                } else {
-                  await _updateCourse(
-                    course.id,
-                    _nameController.text,
-                    _descriptionController.text,
-                    _statusController.text,
-                    _durationController.text,
-                    int.tryParse(_totalStudentsController.text) ?? 0,
-                    null,
-                        (progress) {},
-                  );
+                  return;
                 }
+
+                setState(() {
+                  _isUploading = true;
+                });
+
+                await _updateCourse(
+                  course.id,
+                  _nameController.text,
+                  _descriptionController.text,
+                  _statusController.text,
+                  _durationController.text,
+                  int.tryParse(_totalStudentsController.text) ?? 0,
+                  _selectedImage,
+                      (progress) {
+                    setState(() {
+                      _uploadProgress = progress;
+                    });
+                  },
+                );
+
+                setState(() {
+                  _isUploading = false;
+                });
                 Navigator.of(context).pop();
                 _showUploadSuccessDialog();
               },
-              child: const Text('Save'),
+              child: const Text('Update'),
             ),
           ],
         );
@@ -449,36 +462,14 @@ class _CourseManagementPageState extends State<CourseManagementPage> {
     }
   }
 
-  void _deleteCourse(String courseId) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Confirm Deletion'),
-          content: const Text('Are you sure you want to delete this course?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  await _firestore.collection('Courses').doc(courseId).delete();
-                  final imageRef = _storage.ref('courses/$courseId/$courseId.png');
-                  await imageRef.delete();
-                } catch (e) {
-                  print('Error deleting course: $e');
-                }
-                Navigator.of(context).pop();
-              },
-              child: const Text('Delete'),
-            ),
-          ],
-        );
-      },
-    );
+  void _deleteCourse(String courseId) async {
+    try {
+      await _firestore.collection('Courses').doc(courseId).delete();
+      final imageRef = _storage.ref('courses/$courseId/$courseId.png');
+      await imageRef.delete();
+      print('Course deleted successfully!');
+    } catch (e) {
+      print('Error deleting course: $e');
+    }
   }
 }
