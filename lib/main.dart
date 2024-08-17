@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
+import 'firebase_notification.dart'; // Import your notification class here
 import 'login_page.dart';
 import 'admin_login_page.dart';
 import 'register_page.dart';
@@ -14,27 +14,20 @@ import 'tour_page.dart';
 import 'about_page.dart';
 import 'user_page.dart';
 
-// Background message handler
-Future<void> _backgroundMessageHandler(RemoteMessage message) async {
-  // Handle background messages
-  print("Handling a background message: ${message.messageId}");
-  // Optionally, show a notification here
-}
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   try {
+    // Initialize Firebase first
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
     }
 
-    // Initialize Firebase Messaging
-    FirebaseMessaging.onBackgroundMessage(_backgroundMessageHandler);
 
+    // Run the app after Firebase and notifications are initialized
     runApp(MyApp(homePage: await getInitialPage()));
   } catch (e) {
     print('Error initializing Firebase: $e');
@@ -75,7 +68,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   List<CustomListItem> items = [];
   final ScrollController _scrollController = ScrollController();
 
@@ -83,8 +75,6 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     fetchDataFromFirestore();
-    _requestPermissions();
-    _configureFirebaseMessaging();
   }
 
   Future<void> fetchDataFromFirestore() async {
@@ -192,28 +182,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void _requestPermissions() {
-    _firebaseMessaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-  }
-
-  void _configureFirebaseMessaging() {
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message.notification != null) {
-        print("Message notification: ${message.notification!.title}");
-        // Optionally, show a notification here
-      }
-    });
-
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print("Message clicked! ${message.messageId}");
-      // Handle navigation if necessary
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -223,14 +191,14 @@ class _MyHomePageState extends State<MyHomePage> {
         decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage('assets/login1.png'),
-            fit: BoxFit.cover, // Changed to cover to avoid white bars
+            fit: BoxFit.cover,
           ),
         ),
         child: SingleChildScrollView(
           child: Column(
             children: <Widget>[
               Container(
-                margin: const EdgeInsets.only(top: 50.0, left: 20.0),
+                margin: const EdgeInsets.only(top:40.0, left: 20.0),
                 child: const Text(
                   'Hello, Guest',
                   style: TextStyle(
@@ -349,51 +317,40 @@ class _MyHomePageState extends State<MyHomePage> {
     double cardHeight = cardWidth; // Keep height same as width
 
     return Column(
-      children: <Widget>[
-        Card(
-          elevation: 15.0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22.0),
-          ),
+      children: [
+        GestureDetector(
+          onTap: page == null
+              ? _showPasswordDialog
+              : () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => page),
+            );
+          },
           child: Container(
             width: cardWidth,
             height: cardHeight,
-            margin: const EdgeInsets.all(1.0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(22.0),
-              child: InkWell(
-                onTap: () {
-                  if (text == 'Admin') {
-                    _showPasswordDialog();
-                  } else if (page != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => page),
-                    );
-                  }
-                },
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Icon(
-                        icon,
-                        size: 50.0,
-                        color: Colors.blueAccent,
-                      ),
-                      const SizedBox(height: 10.0),
-                      Text(
-                        text,
-                        style: const TextStyle(
-                          fontSize: 15.0,
-                          color: Colors.blueAccent,
-                        ),
-                      ),
-                    ],
-                  ),
+            margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12.0),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  spreadRadius: 2,
+                  blurRadius: 5,
+                  offset: const Offset(0, 3), // changes position of shadow
                 ),
-              ),
+              ],
             ),
+            child: Icon(icon, size: 30.0, color: Colors.blue),
+          ),
+        ),
+        Text(
+          text,
+          style: const TextStyle(
+            fontSize: 16.0,
+            color: Colors.white,
           ),
         ),
       ],

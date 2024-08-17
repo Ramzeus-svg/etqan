@@ -23,6 +23,7 @@ dependencies:
   cupertino_icons: ^1.0.6
   firebase_app_check: ^0.3.0+4
   firebase_messaging: ^15.0.4
+  firebase_analytics: ^11.2.1
 
 dev_dependencies:
   flutter_test:

@@ -1,9 +1,9 @@
+import 'package:Etqan/firebase_notification.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'login_page.dart';
 import 'bottom_bar.dart';
 import 'course_detailed_page.dart'; // Assuming you have this page
@@ -20,7 +20,7 @@ class UserPage extends StatefulWidget {
 class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
-  late FirebaseMessaging _firebaseMessaging;
+
 
   String _userName = 'Loading...';
   String _studentId = 'Loading...';
@@ -36,7 +36,6 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
     _tabController = TabController(length: 3, vsync: this); // Initialize TabController
     _initializeData();
     _activateAppCheck();
-    _initializeFirebaseMessaging();  // Initialize Firebase Messaging
   }
 
   @override
@@ -69,40 +68,6 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
     } catch (e) {
       print('Error activating Firebase App Check: $e');
     }
-  }
-
-  Future<void> _initializeFirebaseMessaging() async {
-    _firebaseMessaging = FirebaseMessaging.instance;
-
-    // Request permission for iOS devices
-    NotificationSettings settings = await _firebaseMessaging.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
-    );
-
-    print('User granted permission: ${settings.authorizationStatus}');
-
-    // Get the token for the device
-    String? token = await _firebaseMessaging.getToken();
-    print("Firebase Messaging Token: $token");
-
-    // Listen for messages when the app is in the foreground
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print('Received a message: ${message.messageId}');
-      if (message.notification != null) {
-        print('Message also contained a notification: ${message.notification}');
-      }
-    });
-
-    // Listen for messages when the app is in the background or terminated
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print('A message triggered app open: ${message.messageId}');
-    });
   }
 
   Future<void> _fetchUserData(String email) async {
@@ -310,11 +275,13 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
           Text(
             'Find your favorite Course here!',
             style: TextStyle(
-              fontSize: isSmallScreen ? 22 : 28,
               color: Colors.white,
+              fontSize: isSmallScreen ? 24 : 32,
               fontWeight: FontWeight.bold,
             ),
           ),
+          const SizedBox(height: 20),
+          _buildSearchBar(isSmallScreen),
         ],
       ),
     );
@@ -324,35 +291,56 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        Row(
           children: [
-            Text(
-              'Hello, $_userName!',
-              style: TextStyle(
-                fontSize: isSmallScreen ? 20 : 24,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+            CircleAvatar(
+              radius: isSmallScreen ? 25 : 30,
+              backgroundImage: const AssetImage('assets/etqan.png'),
             ),
-            Text(
-              'Student ID: $_studentId',
-              style: TextStyle(
-                fontSize: isSmallScreen ? 16 : 18,
-                color: Colors.white70,
-              ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Hello, $_userName!',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isSmallScreen ? 18 : 24,
+                  ),
+                ),
+                Text(
+                  'ID: $_studentId',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: isSmallScreen ? 14 : 18,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-        GestureDetector(
-          onTap: _showOptionsDialog,
-          child: const Icon(
-            Icons.person,
-            color: Colors.white,
-            size: 30,
-          ),
+        IconButton(
+          icon: Icon(Icons.notifications, color: Colors.white),
+          onPressed: _showOptionsDialog,
         ),
       ],
+    );
+  }
+
+  Widget _buildSearchBar(bool isSmallScreen) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: TextField(
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          hintText: 'Search Courses',
+          prefixIcon: Icon(Icons.search, color: Colors.grey),
+        ),
+      ),
     );
   }
 
@@ -360,89 +348,107 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildCategoryButton('All'),
-        _buildCategoryButton('Popular'),
-        _buildCategoryButton('New'),
+        _buildCategoryButton('All', Icons.all_inbox, isSmallScreen),
+        _buildCategoryButton('Popular', Icons.trending_up, isSmallScreen),
+        _buildCategoryButton('New', Icons.new_releases, isSmallScreen),
       ],
     );
   }
 
-  Widget _buildCategoryButton(String label) {
+  Widget _buildCategoryButton(String category, IconData icon, bool isSmallScreen) {
     return ElevatedButton(
-      onPressed: () {
-        if (label == 'All') {
-          _fetchCoursesFromFirestore();
-        } else if (label == 'Popular') {
-          _fetchCoursesFromFirestore(status: 'popular');
-        } else if (label == 'New') {
-          _fetchCoursesFromFirestore(status: 'new');
-        }
-      },
       style: ElevatedButton.styleFrom(
-        foregroundColor: Colors.white, backgroundColor: Colors.blue,
+        backgroundColor: Colors.blue,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(30),
+        ),
+        padding: EdgeInsets.symmetric(
+          horizontal: isSmallScreen ? 10 : 20,
+          vertical: isSmallScreen ? 10 : 15,
         ),
       ),
-      child: Text(label),
+      onPressed: () {
+        // Handle category button press
+        String? status;
+        if (category == 'Popular') {
+          status = 'trendy'; // You might want to include other statuses like 'popular', 'most purchased'
+        } else if (category == 'New') {
+          status = 'new';
+        }
+        _fetchCoursesFromFirestore(status: status);
+      },
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: isSmallScreen ? 16 : 24, color: Colors.white),
+          const SizedBox(width: 8),
+          Text(
+            category,
+            style: TextStyle(
+              fontSize: isSmallScreen ? 14 : 18,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
     );
   }
+
 
   Widget _buildTrendingCoursesSection(bool isSmallScreen) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Trending Courses',
-          style: TextStyle(
-            fontSize: isSmallScreen ? 20 : 24,
-            fontWeight: FontWeight.bold,
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20 : 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Trending Courses',
+            style: TextStyle(
+              fontSize: isSmallScreen ? 20 : 24,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-        const SizedBox(height: 10),
-        SizedBox(
-          height: isSmallScreen ? 200 : 250,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _items.length,
-            itemBuilder: (context, index) {
-              final item = _items[index];
-              final imageUrl = _courseImages[item.name] ?? 'https://example.com/placeholder.png';
-              return _buildCourseCard(item.name, imageUrl);
-            },
-          ),
-        ),
-      ],
+          const SizedBox(height: 10),
+          _buildCourseList(isSmallScreen),
+        ],
+      ),
     );
   }
 
-  Widget _buildCourseCard(String courseName, String imageUrl) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CourseDetailedPage(courseName: courseName, courseDescription: '', courseImageUrl: '', courseImage: '', imageUrl: '',),
+  Widget _buildCourseList(bool isSmallScreen) {
+    return ListView.builder(
+      shrinkWrap: true,
+      itemCount: _items.length,
+      itemBuilder: (context, index) {
+        final item = _items[index];
+        final imageUrl = _courseImages[item.name] ?? 'https://example.com/placeholder.png';
+
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CourseDetailedPage(courseName: item.name, courseDescription: '', courseImageUrl: '', courseImage: '', imageUrl: '',),
+              ),
+            );
+          },
+          child: Card(
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: ListTile(
+              contentPadding: EdgeInsets.all(10),
+              leading: Image.network(imageUrl, fit: BoxFit.cover),
+              title: Text(item.name),
+              subtitle: Text(item.content),
+            ),
           ),
         );
       },
-      child: Card(
-        elevation: 5,
-        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        child: Column(
-          children: [
-            Image.network(imageUrl, height: 120, fit: BoxFit.cover),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(courseName, style: const TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
-
 
 class CustomListItem {
   final String name;
