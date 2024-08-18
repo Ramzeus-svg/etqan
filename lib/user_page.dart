@@ -1,4 +1,3 @@
-import 'package:Etqan/firebase_notification.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -6,7 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'login_page.dart';
 import 'bottom_bar.dart';
-import 'course_detailed_page.dart'; // Assuming you have this page
+import 'course_detailed_page.dart';
+import 'wishlist_page.dart';
 
 class UserPage extends StatefulWidget {
   final String email;
@@ -20,7 +20,6 @@ class UserPage extends StatefulWidget {
 class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
-
 
   String _userName = 'Loading...';
   String _studentId = 'Loading...';
@@ -245,13 +244,111 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
 
   Widget _buildWishlistPage() {
     return Center(
-      child: Text('Wishlist Page', style: TextStyle(fontSize: 24)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildModernButton(
+              icon: Icons.checklist_rounded,
+              color: Colors.blue,
+              label: 'Select Courses',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => WishlistPage()),
+                );
+              },
+            ),
+            const SizedBox(height: 16), // Add space between buttons
+            _buildModernButton(
+              icon: Icons.delete,
+              color: Colors.red,
+              label: 'Delete Course',
+              onPressed: () {
+                _deleteCourse();
+              },
+            ),
+            const SizedBox(height: 16), // Add space between buttons
+            _buildModernButton(
+              icon: Icons.list,
+              color: Colors.green,
+              label: 'Show All Courses',
+              onPressed: () {
+                _showAllCourses();
+              },
+            ),
+          ],
+        ),
+      ),
     );
+  }
+
+  Widget _buildModernButton({
+    required IconData icon,
+    required Color color,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color, // Background color
+        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+      icon: Icon(icon, size: 24),
+      label: Text(
+        label,
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
+      onPressed: onPressed,
+    );
+  }
+
+  Widget _buildIconButton({
+    required IconData icon,
+    required Color color,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: Icon(icon, size: 40, color: color),
+          onPressed: onPressed,
+        ),
+        Text(label, style: TextStyle(fontSize: 16)),
+      ],
+    );
+  }
+
+// Placeholder methods for actions
+  void _deleteCourse() {
+    // Implement the logic to delete a course
+  }
+
+  void _showAllCourses() {
+    // Implement the logic to show all courses
   }
 
   Widget _buildProfilePage() {
     return Center(
-      child: Text('Profile Page', style: TextStyle(fontSize: 24)),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            icon: Icon(Icons.rate_review_rounded, size: 40, color: Colors.blue),
+            onPressed: () {
+              // Navigate to course review page
+            },
+          ),
+          const SizedBox(height: 10),
+          Text('Review Courses', style: TextStyle(fontSize: 24)),
+        ],
+      ),
     );
   }
 
@@ -302,7 +399,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Hello, $_userName!',
+                  'Hello, Dr. $_userName',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: isSmallScreen ? 18 : 24,
@@ -311,7 +408,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                 Text(
                   'ID: $_studentId',
                   style: TextStyle(
-                    color: Colors.white70,
+                    color: Colors.white,
                     fontSize: isSmallScreen ? 14 : 18,
                   ),
                 ),
@@ -320,7 +417,11 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
           ],
         ),
         IconButton(
-          icon: Icon(Icons.notifications, color: Colors.white),
+          icon: Icon(
+            Icons.person,
+            color: Colors.white,
+            size: isSmallScreen ? 30 : 36,
+          ),
           onPressed: _showOptionsDialog,
         ),
       ],
@@ -329,17 +430,29 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
 
   Widget _buildSearchBar(bool isSmallScreen) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      height: 50,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
       ),
-      child: TextField(
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          hintText: 'Search Courses',
-          prefixIcon: Icon(Icons.search, color: Colors.grey),
-        ),
+      child: Row(
+        children: [
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 10),
+            child: Icon(Icons.search),
+          ),
+          Expanded(
+            child: TextField(
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                hintText: 'Search your course...',
+              ),
+              onSubmitted: (query) {
+                // Implement search functionality
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -348,104 +461,133 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildCategoryButton('All', Icons.all_inbox, isSmallScreen),
-        _buildCategoryButton('Popular', Icons.trending_up, isSmallScreen),
-        _buildCategoryButton('New', Icons.new_releases, isSmallScreen),
+        _buildCategoryButton(
+          label: 'All',
+          onPressed: () => _fetchCoursesFromFirestore(),
+        ),
+        _buildCategoryButton(
+          label: 'Popular',
+          onPressed: () => _fetchCoursesFromFirestore(status: 'popular'),
+        ),
+        _buildCategoryButton(
+          label: 'New',
+          onPressed: () => _fetchCoursesFromFirestore(status: 'new'),
+        ),
       ],
     );
   }
 
-  Widget _buildCategoryButton(String category, IconData icon, bool isSmallScreen) {
+  Widget _buildCategoryButton({required String label, required VoidCallback onPressed}) {
     return ElevatedButton(
+      onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue,
+        backgroundColor: const Color(0xFF160E30), // Purple background
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30),
         ),
-        padding: EdgeInsets.symmetric(
-          horizontal: isSmallScreen ? 10 : 20,
-          vertical: isSmallScreen ? 10 : 15,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
       ),
-      onPressed: () {
-        // Handle category button press
-        String? status;
-        if (category == 'Popular') {
-          status = 'trendy'; // You might want to include other statuses like 'popular', 'most purchased'
-        } else if (category == 'New') {
-          status = 'new';
-        }
-        _fetchCoursesFromFirestore(status: status);
-      },
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: isSmallScreen ? 16 : 24, color: Colors.white),
-          const SizedBox(width: 8),
-          Text(
-            category,
-            style: TextStyle(
-              fontSize: isSmallScreen ? 14 : 18,
-              color: Colors.white,
-            ),
-          ),
-        ],
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 16),
       ),
     );
   }
 
-
   Widget _buildTrendingCoursesSection(bool isSmallScreen) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20 : 40),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20 : 40),
+          child: Text(
             'Trending Courses',
             style: TextStyle(
-              fontSize: isSmallScreen ? 20 : 24,
+              fontSize: isSmallScreen ? 20 : 28,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 10),
-          _buildCourseList(isSmallScreen),
-        ],
-      ),
+        ),
+        const SizedBox(height: 10),
+        _items.isEmpty
+            ? Padding(
+          padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20 : 40),
+          child: Text(
+            'No courses found',
+            style: TextStyle(
+              fontSize: isSmallScreen ? 16 : 20,
+              color: Colors.grey,
+            ),
+          ),
+        )
+            : _buildCoursesList(isSmallScreen),
+      ],
     );
   }
 
-  Widget _buildCourseList(bool isSmallScreen) {
-    return ListView.builder(
-      shrinkWrap: true,
-      itemCount: _items.length,
-      itemBuilder: (context, index) {
-        final item = _items[index];
-        final imageUrl = _courseImages[item.name] ?? 'https://example.com/placeholder.png';
+  Widget _buildCoursesList(bool isSmallScreen) {
+    return SizedBox(
+      height: isSmallScreen ? 200 : 250,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _items.length,
+        itemBuilder: (context, index) {
+          final item = _items[index];
+          final courseImage = _courseImages[item.name] ?? 'https://example.com/placeholder.png';
 
-        return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CourseDetailedPage(courseName: item.name, courseDescription: '', courseImageUrl: '', courseImage: '', imageUrl: '',),
+          return GestureDetector(
+            onTap: () {
+              // Navigate to CourseDetailedPage with item details
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CourseDetailedPage(
+                    courseName: item.name,
+                    courseImage: courseImage, courseDescription: '', imageUrl: '', courseImageUrl: '',
+                  ),
+                ),
+              );
+            },
+            child: Container(
+              width: isSmallScreen ? 160 : 200,
+              margin: EdgeInsets.symmetric(horizontal: isSmallScreen ? 10 : 15),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                image: DecorationImage(
+                  image: NetworkImage(courseImage),
+                  fit: BoxFit.cover,
+                ),
               ),
-            );
-          },
-          child: Card(
-            margin: const EdgeInsets.symmetric(vertical: 10),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
+              child: Stack(
+                children: [
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: isSmallScreen ? 10 : 15),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.6),
+                        borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(20),
+                        ),
+                      ),
+                      child: Text(
+                        item.name,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: isSmallScreen ? 14 : 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            child: ListTile(
-              contentPadding: EdgeInsets.all(10),
-              leading: Image.network(imageUrl, fit: BoxFit.cover),
-              title: Text(item.name),
-              subtitle: Text(item.content),
-            ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
