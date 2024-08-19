@@ -311,7 +311,7 @@ class _AdminPageState extends State<AdminPage> with SingleTickerProviderStateMix
                   MaterialPageRoute(builder: (context) =>  CourseManagementPage()),
                 );
               }),
-              _buildCategoryButton('Announcements', Icons.notifications, Colors.red, () {}),
+              _buildCategoryButton('Announce', Icons.notifications, Colors.red, () {}),
               _buildCategoryButton('Grades', Icons.grade, Colors.green, () {}),
             ],
           ),
