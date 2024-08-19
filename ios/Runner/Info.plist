@@ -54,6 +54,8 @@
         <string>We need access to your photo library to allow you to select images.</string>
         <key>NSCameraUsageDescription</key>
         <string>We need access to your camera to allow you to take photos.</string>
+        <key>NSContactsUsageDescription</key>
+        <string>We need access to your contacts to save user information.</string> <!-- Added key for contacts access -->
 
         <!-- Firebase Cloud Messaging Configuration -->
         <key>FirebaseAppDelegateProxyEnabled</key>
@@ -62,6 +64,5 @@
         <string>Your_GoogleService-Info_plist_path_here</string>
         <key>APSEnvironment</key>
         <string>development</string> <!-- Change to 'production' for release builds -->
-
     </dict>
 </plist>

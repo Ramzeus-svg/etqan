@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'dart:io' show Platform;
 
 class UserDetailsPage extends StatelessWidget {
   final String userId;
@@ -14,7 +13,7 @@ class UserDetailsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('User Details'),
-        backgroundColor: Color(0xFF160E30),
+        backgroundColor: const Color(0xFF160E30),
       ),
       body: FutureBuilder<DocumentSnapshot>(
         future: FirebaseFirestore.instance.collection('Users').doc(userId).get(),
@@ -46,7 +45,11 @@ class UserDetailsPage extends StatelessWidget {
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () async {
-                    await _addContactFunctionality(userData['name'], '${userData['dial']} ${userData['phone']}', context);
+                    await _addContactFunctionality(
+                      userData['name'],
+                      '${userData['dial']} ${userData['phone']}',
+                      context,
+                    );
                   },
                   child: const Text('Contact'),
                   style: ElevatedButton.styleFrom(
@@ -83,31 +86,25 @@ class UserDetailsPage extends StatelessWidget {
   }
 
   Future<void> _addContactFunctionality(String name, String phoneNumber, BuildContext context) async {
-    try {
-      if (Platform.isAndroid || Platform.isIOS) {
-        if (await Permission.contacts.request().isGranted) {
-          final newContact = Contact(
-            givenName: name,
-            phones: [Item(label: "mobile", value: phoneNumber)],
-          );
+    if (await Permission.contacts.request().isGranted) {
+      try {
+        final newContact = Contact(
+          givenName: name,
+          phones: [Item(label: "mobile", value: phoneNumber)],
+        );
 
-          await ContactsService.addContact(newContact);
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Contact added: $name - $phoneNumber'),
-          ));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Permission to access contacts denied'),
-          ));
-        }
-      } else {
+        await ContactsService.addContact(newContact);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Contact functionality is not supported on this platform'),
+          content: Text('Contact added: $name - $phoneNumber'),
+        ));
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Failed to add contact: $e'),
         ));
       }
-    } catch (e) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Failed to add contact: $e'),
+        content: const Text('Permission to access contacts denied'),
       ));
     }
   }

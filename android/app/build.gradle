@@ -1,16 +1,12 @@
 plugins {
     id "com.android.application"
-    id "com.google.gms.google-services"
-    id "kotlin-android"
+    id "com.google.gms.google-services" // Ensure this plugin is applied
+    id "org.jetbrains.kotlin.android" // Updated to the correct Kotlin plugin
     id "dev.flutter.flutter-gradle-plugin"
 }
 
 // Define Kotlin version
-ext.kotlin_version = '1.9.0'  // Use a stable Kotlin version compatible with the Android Gradle Plugin
-
-// Define version code and version name
-def flutterVersionCode = project.hasProperty('flutterVersionCode') ? project.flutterVersionCode.toInteger() : 1
-def flutterVersionName = project.hasProperty('flutterVersionName') ? project.flutterVersionName : "1.0.0"
+ext.kotlin_version = '1.9.0'  // Ensure this is compatible with your Gradle plugin version
 
 android {
     namespace = "com.example.etqan"
@@ -26,7 +22,7 @@ android {
         applicationId = "com.example.etqan"
         resValue "string", "applicationName", "Etqan Center"  // Correct application name
         minSdkVersion 23
-        targetSdkVersion 34  // Align targetSdkVersion with compileSdkVersion
+        targetSdkVersion 34
         versionCode flutterVersionCode
         versionName flutterVersionName
     }
@@ -34,7 +30,7 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.debug  // Consider using a proper release signing config
-            minifyEnabled false  // Disable code shrinking for release build (can be changed)
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -42,11 +38,16 @@ android {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation platform('com.google.firebase:firebase-bom:32.3.1')  // Use the latest BOM version
-    implementation 'com.google.firebase:firebase-messaging'  // Firebase messaging library
-    // Add other dependencies here
+    implementation platform('com.google.firebase:firebase-bom:32.3.1')  // Ensure Firebase BOM is up-to-date
+    implementation 'com.google.firebase:firebase-messaging'
+    implementation 'com.google.android.gms:play-services-auth:20.6.0' // Ensure play-services-auth is added if required
+    implementation 'com.android.support:multidex:1.0.3' // Add multidex support if needed
+    // Add other dependencies as needed
 }
 
 flutter {
     source = "../.."
 }
+
+// Apply the Google Services plugin (ensure it's the last line)
+apply plugin: 'com.google.gms.google-services'
