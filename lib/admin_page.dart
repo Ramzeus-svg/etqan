@@ -6,6 +6,7 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'bottom_bar_admin.dart';
 import 'admin_login_page.dart';
 import 'course_management_page.dart';
+import 'admin-settings_page.dart';
 
 class AdminPage extends StatefulWidget {
   final String email;
@@ -311,7 +312,8 @@ class _AdminPageState extends State<AdminPage> with SingleTickerProviderStateMix
                   MaterialPageRoute(builder: (context) =>  CourseManagementPage()),
                 );
               }),
-              _buildCategoryButton('Announce', Icons.notifications, Colors.red, () {}),
+              _buildCategoryButton('Announce', Icons.notifications, Colors.red, () {
+              }),
               _buildCategoryButton('Grades', Icons.grade, Colors.green, () {}),
             ],
           ),
@@ -321,7 +323,12 @@ class _AdminPageState extends State<AdminPage> with SingleTickerProviderStateMix
             children: [
               _buildCategoryButton('Payments', Icons.payment, Colors.orange, () {}),
               _buildCategoryButton('Users', Icons.people, Colors.purple, () {}),
-              _buildCategoryButton('Settings', Icons.settings, Colors.grey, () {}),
+              _buildCategoryButton('Settings', Icons.settings, Colors.grey, () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) =>  SettingsPage()),
+                );
+              }),
             ],
           ),
         ],
