@@ -25,6 +25,8 @@ dependencies:
   firebase_messaging: ^15.0.4
   firebase_analytics: ^11.2.1
   url_launcher: ^6.1.7
+  contacts_service: ^0.6.3
+  permission_handler: ^10.2.0
 
 dev_dependencies:
   flutter_test:
