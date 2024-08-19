@@ -6,11 +6,11 @@ plugins {
 }
 
 // Define Kotlin version
-ext.kotlin_version = '2.0.10'
+ext.kotlin_version = '1.9.0'  // Use a stable Kotlin version compatible with the Android Gradle Plugin
 
 // Define version code and version name
 def flutterVersionCode = project.hasProperty('flutterVersionCode') ? project.flutterVersionCode.toInteger() : 1
-def flutterVersionName = project.hasProperty('flutterVersionName') ? project.flutterVersionName : "1.0"
+def flutterVersionName = project.hasProperty('flutterVersionName') ? project.flutterVersionName : "1.0.0"
 
 android {
     namespace = "com.example.etqan"
@@ -24,25 +24,26 @@ android {
 
     defaultConfig {
         applicationId = "com.example.etqan"
-        resValue "string", "applicationName", "com.example.etqan.MainApplication"
+        resValue "string", "applicationName", "Etqan Center"  // Correct application name
         minSdkVersion 23
-        targetSdkVersion 33
+        targetSdkVersion 34  // Align targetSdkVersion with compileSdkVersion
         versionCode flutterVersionCode
         versionName flutterVersionName
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.debug  // Consider using a proper release signing config
+            minifyEnabled false  // Disable code shrinking for release build (can be changed)
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
 
-// Apply Kotlin plugin with version
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation 'com.google.firebase:firebase-messaging'
-    implementation platform('com.google.firebase:firebase-bom:latest_version')
+    implementation platform('com.google.firebase:firebase-bom:32.3.1')  // Use the latest BOM version
+    implementation 'com.google.firebase:firebase-messaging'  // Firebase messaging library
     // Add other dependencies here
 }
 
