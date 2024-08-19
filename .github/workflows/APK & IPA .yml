@@ -45,9 +45,8 @@ jobs:
         run: |
           sed -i '' 's/ext.kotlin_version = .*/ext.kotlin_version = "2.0.10"/' android/build.gradle
 
-      # Removed APK build step
-      # - name: Build APK
-      #   run: flutter build apk --release -v
+      - name: Build APK
+        run: flutter build apk --release -v
 
       - name: Update CocoaPods
         run: pod repo update
@@ -67,13 +66,12 @@ jobs:
           cd ..
           zip -r Etqan.ipa Payload
 
-      # Removed APK check step
-      # - name: Check if APK exists
-      #   run: |
-      #     if [ ! -f build/app/outputs/apk/release/app-release.apk ]; then
-      #       echo "APK not found!"
-      #       exit 1
-      #     fi
+      - name: Check if APK exists
+        run: |
+          if [ ! -f build/app/outputs/apk/release/app-release.apk ]; then
+            echo "APK not found!"
+            exit 1
+          fi
 
       - name: Check if IPA exists
         run: |
@@ -85,6 +83,6 @@ jobs:
       - name: Push to Releases
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "build/ios/iphoneos/Etqan.ipa"
+          artifacts: "build/app/outputs/apk/release/app-release.apk,build/ios/iphoneos/Etqan.ipa"
           tag: v1.0.${{ github.run_number }}
           token: ${{ secrets.GITHUB_TOKEN }}
