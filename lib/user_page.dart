@@ -7,6 +7,7 @@ import 'login_page.dart';
 import 'bottom_bar.dart';
 import 'course_detailed_page.dart';
 import 'wishlist_page.dart';
+import 'show_courses_users_page.dart';
 
 class UserPage extends StatefulWidget {
   final String email;
@@ -275,6 +276,10 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
               color: Colors.green,
               label: 'Show All Courses',
               onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => RegisteredCoursesPage()),
+                );
                 _showAllCourses();
               },
             ),
