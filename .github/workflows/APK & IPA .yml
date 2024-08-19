@@ -43,13 +43,17 @@ jobs:
 
       - name: Set up Kotlin Version
         run: |
-          sed -i '' 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.0"/' android/build.gradle
+          sed -i '' 's/ext.kotlin_version = .*/ext.kotlin_version = "2.0.10"/' android/build.gradle
 
       - name: Build APK
         run: flutter build apk --release -v
 
       - name: Update CocoaPods
         run: pod repo update
+        working-directory: ios
+
+      - name: Install CocoaPods
+        run: pod install
         working-directory: ios
 
       - name: Build iOS App
