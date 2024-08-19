@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:contacts_service/contacts_service.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class UserDetailsPage extends StatelessWidget {
   final String userId;
@@ -13,7 +12,7 @@ class UserDetailsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('User Details'),
-        backgroundColor: const Color(0xFF160E30),
+        backgroundColor: Colors.teal,
       ),
       body: FutureBuilder<DocumentSnapshot>(
         future: FirebaseFirestore.instance.collection('Users').doc(userId).get(),
@@ -31,6 +30,7 @@ class UserDetailsPage extends StatelessWidget {
           }
 
           final userData = snapshot.data!.data() as Map<String, dynamic>;
+          final phoneNumber = '${userData['dial']} ${userData['phone']}';
 
           return Padding(
             padding: const EdgeInsets.all(16.0),
@@ -41,23 +41,20 @@ class UserDetailsPage extends StatelessWidget {
                 _buildUserInfo(Icons.email, 'Email', userData['email']),
                 _buildUserInfo(Icons.card_membership, 'Student ID', userData['studentID']),
                 const SizedBox(height: 20),
-                _buildUserInfo(Icons.phone, 'Number', '${userData['dial']} ${userData['phone']}'),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () async {
-                    await _addContactFunctionality(
-                      userData['name'],
-                      '${userData['dial']} ${userData['phone']}',
-                      context,
-                    );
+                _buildUserInfo(
+                  Icons.phone,
+                  'Number',
+                  phoneNumber,
+                  onTap: () async {
+                    final url = 'tel:$phoneNumber';
+                    if (await canLaunch(url)) {
+                      await launch(url);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: const Text('Could not open dialer.'),
+                      ));
+                    }
                   },
-                  child: const Text('Contact'),
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: Colors.teal,
-                    padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 20.0),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-                  ),
                 ),
               ],
             ),
@@ -67,7 +64,7 @@ class UserDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildUserInfo(IconData icon, String label, String value) {
+  Widget _buildUserInfo(IconData icon, String label, String value, {VoidCallback? onTap}) {
     return Card(
       elevation: 4.0,
       margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -81,31 +78,8 @@ class UserDetailsPage extends StatelessWidget {
           value,
           style: const TextStyle(fontSize: 16),
         ),
+        onTap: onTap,
       ),
     );
-  }
-
-  Future<void> _addContactFunctionality(String name, String phoneNumber, BuildContext context) async {
-    if (await Permission.contacts.request().isGranted) {
-      try {
-        final newContact = Contact(
-          givenName: name,
-          phones: [Item(label: "mobile", value: phoneNumber)],
-        );
-
-        await ContactsService.addContact(newContact);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Contact added: $name - $phoneNumber'),
-        ));
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Failed to add contact: $e'),
-        ));
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: const Text('Permission to access contacts denied'),
-      ));
-    }
   }
 }

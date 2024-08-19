@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 
 class SettingsPage extends StatelessWidget {
@@ -68,18 +68,28 @@ class SettingsPage extends StatelessWidget {
       // Step 2: Convert data to JSON (or any format you prefer)
       final jsonData = data.toString();
 
-      // Step 3: Get the directory to save the file
-      final directory = await getApplicationDocumentsDirectory();
-      final path = '${directory.path}/${collectionName.toLowerCase()}_backup_${DateTime.now().millisecondsSinceEpoch}.json';
+      // Step 3: Let user choose where to save the file
+      final result = await FilePicker.platform.saveFile(
+        dialogTitle: 'Select save location',
+        fileName: '${collectionName.toLowerCase()}_backup_${DateTime.now().millisecondsSinceEpoch}.json',
+      );
 
-      // Step 4: Save the JSON data to the file
-      final file = File(path);
-      await file.writeAsString(jsonData);
+      if (result != null) {
+        final file = File(result);
 
-      // Step 5: Notify the user of success and show the file path
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('$collectionName backup successful! Saved at $path'),
-      ));
+        // Step 4: Save the JSON data to the file
+        await file.writeAsString(jsonData);
+
+        // Step 5: Notify the user of success and show the file path
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('$collectionName backup successful! Saved at $result'),
+        ));
+      } else {
+        // Handle the case when the user cancels the file picker
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Backup was not saved.'),
+        ));
+      }
     } catch (e) {
       // Handle errors
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
