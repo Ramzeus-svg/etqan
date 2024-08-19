@@ -1,10 +1,11 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'course_users_page.dart';
+import 'user_detail_page.dart';
 
 class CourseManagementPage extends StatefulWidget {
   const CourseManagementPage({Key? key}) : super(key: key);
@@ -21,7 +22,7 @@ class _CourseManagementPageState extends State<CourseManagementPage> {
   @override
   void initState() {
     super.initState();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge); // Set UI mode here
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   }
 
   @override
@@ -29,6 +30,7 @@ class _CourseManagementPageState extends State<CourseManagementPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Course Management'),
+        backgroundColor: Colors.teal,
       ),
       body: SafeArea(
         child: Column(
@@ -47,39 +49,55 @@ class _CourseManagementPageState extends State<CourseManagementPage> {
                   final courses = snapshot.data!.docs;
 
                   return ListView.builder(
+                    padding: const EdgeInsets.all(16.0),
                     itemCount: courses.length,
                     itemBuilder: (context, index) {
                       final course = courses[index];
                       final imageUrl = _getImageUrl(course.id);
 
-                      return ListTile(
-                        leading: Image.network(
-                          imageUrl,
-                          width: 50,
-                          height: 50,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.error, size: 50);
+                      return Card(
+                        elevation: 5.0,
+                        margin: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundImage: NetworkImage(imageUrl),
+                            backgroundColor: Colors.grey.shade200,
+                            radius: 30,
+                            onBackgroundImageError: (error, stackTrace) {
+                              // handle image loading error
+                            },
+                          ),
+                          title: Text(course['name'],
+                              style: const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Text('Status: ${course['status']}'),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () {
+                                  _showEditCourseDialog(course);
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () {
+                                  _deleteCourse(course.id);
+                                },
+                              ),
+                            ],
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CourseUsersPage(
+                                  courseId: course.id,
+                                  courseName: course['name'],
+                                ),
+                              ),
+                            );
                           },
-                        ),
-                        title: Text(course['name']),
-                        subtitle: Text('Status: ${course['status']}'),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () {
-                                _showEditCourseDialog(course);
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () {
-                                _deleteCourse(course.id);
-                              },
-                            ),
-                          ],
                         ),
                       );
                     },
@@ -92,6 +110,7 @@ class _CourseManagementPageState extends State<CourseManagementPage> {
               child: FloatingActionButton(
                 onPressed: _showAddCourseDialog,
                 child: const Icon(Icons.add),
+                backgroundColor: Colors.teal,
               ),
             ),
           ],
@@ -144,18 +163,18 @@ class _CourseManagementPageState extends State<CourseManagementPage> {
                   decoration: const InputDecoration(labelText: 'Total Students'),
                   keyboardType: TextInputType.number,
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 if (_selectedImage != null)
                   Column(
                     children: [
-                      Image.file(_selectedImage!, height: 100),
+                      Image.file(_selectedImage!, height: 100, fit: BoxFit.cover),
                       if (_isUploading)
                         LinearProgressIndicator(value: _uploadProgress),
                     ],
                   )
                 else
                   const Text('No image selected.'),
-                TextButton(
+                ElevatedButton(
                   onPressed: () async {
                     try {
                       final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -163,8 +182,6 @@ class _CourseManagementPageState extends State<CourseManagementPage> {
                         setState(() {
                           _selectedImage = File(pickedFile.path);
                         });
-                      } else {
-                        print('No image selected.');
                       }
                     } catch (e) {
                       print('Error picking image: $e');
@@ -190,14 +207,14 @@ class _CourseManagementPageState extends State<CourseManagementPage> {
                     _durationController.text.isEmpty ||
                     _totalStudentsController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: const Text('Please fill in all fields.')),
+                    const SnackBar(content: Text('Please fill in all fields.')),
                   );
                   return;
                 }
 
                 if (_selectedImage == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: const Text('Please select an image.')),
+                    const SnackBar(content: Text('Please select an image.')),
                   );
                   return;
                 }
@@ -281,7 +298,7 @@ class _CourseManagementPageState extends State<CourseManagementPage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.check_circle, color: Colors.green, size: 50),
+              const Icon(Icons.check_circle, color: Colors.green, size: 50),
               const SizedBox(height: 10),
               const Text('The course has been added successfully.'),
             ],
@@ -308,9 +325,6 @@ class _CourseManagementPageState extends State<CourseManagementPage> {
         final _statusController = TextEditingController(text: course['status']);
         final _durationController = TextEditingController(text: course['duration']);
         final _totalStudentsController = TextEditingController(text: course['totalStudents'].toString());
-        File? _selectedImage;
-        bool _isUploading = false;
-        double _uploadProgress = 0;
 
         return AlertDialog(
           title: const Text('Edit Course'),
@@ -339,34 +353,6 @@ class _CourseManagementPageState extends State<CourseManagementPage> {
                   decoration: const InputDecoration(labelText: 'Total Students'),
                   keyboardType: TextInputType.number,
                 ),
-                SizedBox(height: 10),
-                if (_selectedImage != null)
-                  Column(
-                    children: [
-                      Image.file(_selectedImage!, height: 100),
-                      if (_isUploading)
-                        LinearProgressIndicator(value: _uploadProgress),
-                    ],
-                  )
-                else
-                  const Text('No image selected.'),
-                TextButton(
-                  onPressed: () async {
-                    try {
-                      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-                      if (pickedFile != null) {
-                        setState(() {
-                          _selectedImage = File(pickedFile.path);
-                        });
-                      } else {
-                        print('No image selected.');
-                      }
-                    } catch (e) {
-                      print('Error picking image: $e');
-                    }
-                  },
-                  child: const Text('Select Image'),
-                ),
               ],
             ),
           ),
@@ -379,21 +365,6 @@ class _CourseManagementPageState extends State<CourseManagementPage> {
             ),
             ElevatedButton(
               onPressed: () async {
-                if (_nameController.text.isEmpty ||
-                    _descriptionController.text.isEmpty ||
-                    _statusController.text.isEmpty ||
-                    _durationController.text.isEmpty ||
-                    _totalStudentsController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: const Text('Please fill in all fields.')),
-                  );
-                  return;
-                }
-
-                setState(() {
-                  _isUploading = true;
-                });
-
                 await _updateCourse(
                   course.id,
                   _nameController.text,
@@ -401,19 +372,8 @@ class _CourseManagementPageState extends State<CourseManagementPage> {
                   _statusController.text,
                   _durationController.text,
                   int.tryParse(_totalStudentsController.text) ?? 0,
-                  _selectedImage,
-                      (progress) {
-                    setState(() {
-                      _uploadProgress = progress;
-                    });
-                  },
                 );
-
-                setState(() {
-                  _isUploading = false;
-                });
                 Navigator.of(context).pop();
-                _showUploadSuccessDialog();
               },
               child: const Text('Update'),
             ),
@@ -430,46 +390,58 @@ class _CourseManagementPageState extends State<CourseManagementPage> {
       String status,
       String duration,
       int totalStudents,
-      File? imageFile,
-      void Function(double) onProgress,
       ) async {
     try {
-      final courseRef = _firestore.collection('Courses').doc(courseId);
-
-      // Update course data
-      await courseRef.update({
+      await _firestore.collection('Courses').doc(courseId).update({
         'name': name,
         'description': description,
         'status': status,
         'duration': duration,
         'totalStudents': totalStudents,
       });
-
-      if (imageFile != null) {
-        // Upload image
-        final imageRef = _storage.ref('courses/$courseId/$courseId.png');
-        final uploadTask = imageRef.putFile(imageFile);
-
-        uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
-          final progress = (snapshot.bytesTransferred / snapshot.totalBytes);
-          onProgress(progress);
-        });
-
-        await uploadTask.whenComplete(() => print('Image uploaded successfully!'));
-      }
     } catch (e) {
       print('Error updating course: $e');
     }
   }
 
-  void _deleteCourse(String courseId) async {
-    try {
-      await _firestore.collection('Courses').doc(courseId).delete();
-      final imageRef = _storage.ref('courses/$courseId/$courseId.png');
-      await imageRef.delete();
-      print('Course deleted successfully!');
-    } catch (e) {
-      print('Error deleting course: $e');
-    }
+  void _deleteCourse(String courseId) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete Course'),
+          content: const Text('Are you sure you want to delete this course?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  // Delete course data
+                  await _firestore.collection('Courses').doc(courseId).delete();
+
+                  // Delete image
+                  final imageRef = _storage.ref('courses/$courseId/$courseId.png');
+                  await imageRef.delete();
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Course deleted successfully.')),
+                  );
+                } catch (e) {
+                  print('Error deleting course: $e');
+                } finally {
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

@@ -308,7 +308,7 @@ class _AdminPageState extends State<AdminPage> with SingleTickerProviderStateMix
               _buildCategoryButton('Courses', Icons.book, Colors.blue, () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const CourseManagementPage()),
+                  MaterialPageRoute(builder: (context) =>  CourseManagementPage()),
                 );
               }),
               _buildCategoryButton('Announcements', Icons.notifications, Colors.red, () {}),
@@ -467,7 +467,7 @@ class _AdminPageState extends State<AdminPage> with SingleTickerProviderStateMix
           _buildActionButton('Manage Courses', Icons.school, Colors.blue, () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const CourseManagementPage()),
+              MaterialPageRoute(builder: (context) => CourseManagementPage()),
             );
           }),
         ],
