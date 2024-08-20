@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class UserDetailsPage extends StatelessWidget {
   final String userId;
@@ -31,6 +32,7 @@ class UserDetailsPage extends StatelessWidget {
 
           final userData = snapshot.data!.data() as Map<String, dynamic>;
           final phoneNumber = '${userData['dial']} ${userData['phone']}';
+          final whatsappNumber = userData['whatsapp'] ?? ''; // Adjust if needed
 
           return Padding(
             padding: const EdgeInsets.all(16.0),
@@ -55,6 +57,46 @@ class UserDetailsPage extends StatelessWidget {
                       ));
                     }
                   },
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          final whatsappUrl = 'https://wa.me/$whatsappNumber';
+                          if (await canLaunch(whatsappUrl)) {
+                            await launch(whatsappUrl);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: const Text('Could not open WhatsApp.'),
+                            ));
+                          }
+                        },
+                        icon: const Icon(FontAwesomeIcons.whatsapp, color: Colors.white),
+                        label: const Text('WhatsApp'),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          final callUrl = 'tel:$phoneNumber';
+                          if (await canLaunch(callUrl)) {
+                            await launch(callUrl);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: const Text('Could not open dialer.'),
+                            ));
+                          }
+                        },
+                        icon: const Icon(Icons.phone, color: Colors.white),
+                        label: const Text('Call'),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

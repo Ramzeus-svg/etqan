@@ -1,7 +1,10 @@
+import 'dart:convert';
+import 'dart:io' as io;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:io';
+import 'dart:html' as html;
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -65,36 +68,45 @@ class SettingsPage extends StatelessWidget {
       final snapshot = await FirebaseFirestore.instance.collection(collectionName).get();
       final data = snapshot.docs.map((doc) => doc.data()).toList();
 
-      // Step 2: Convert data to JSON (or any format you prefer)
-      final jsonData = data.toString();
+      // Step 2: Convert data to JSON
+      final jsonData = jsonEncode(data);
+      final fileName = '${collectionName.toLowerCase()}_backup_${DateTime.now().millisecondsSinceEpoch}.json';
 
-      // Step 3: Let user choose where to save the file
+      if (kIsWeb) {
+        // Handle file download on web
+        _downloadFileWeb(jsonData, fileName);
+        _showSnackBar(context, '$collectionName backup successful! File downloaded.');
+        return;
+      }
+
+      // Handle file saving on other platforms
       final result = await FilePicker.platform.saveFile(
         dialogTitle: 'Select save location',
-        fileName: '${collectionName.toLowerCase()}_backup_${DateTime.now().millisecondsSinceEpoch}.json',
+        fileName: fileName,
       );
 
       if (result != null) {
-        final file = File(result);
-
-        // Step 4: Save the JSON data to the file
+        final file = io.File(result);
         await file.writeAsString(jsonData);
-
-        // Step 5: Notify the user of success and show the file path
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('$collectionName backup successful! Saved at $result'),
-        ));
+        _showSnackBar(context, '$collectionName backup successful! Saved at $result');
       } else {
-        // Handle the case when the user cancels the file picker
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Backup was not saved.'),
-        ));
+        _showSnackBar(context, 'Backup was not saved.');
       }
     } catch (e) {
-      // Handle errors
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('$collectionName backup failed: $e'),
-      ));
+      _showSnackBar(context, '$collectionName backup failed: $e');
     }
+  }
+
+  void _downloadFileWeb(String content, String fileName) {
+    final blob = html.Blob([content], 'application/json');
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    final anchor = html.AnchorElement(href: url)
+      ..setAttribute('download', fileName)
+      ..click();
+    html.Url.revokeObjectUrl(url);
+  }
+
+  void _showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 }
