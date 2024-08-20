@@ -29,7 +29,8 @@ android {
 
     buildTypes {
         release {
-            signingConfig signingConfigs.debug  // Consider using a proper release signing config
+            // Use a proper release signing config if available
+            signingConfig signingConfigs.debug
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }

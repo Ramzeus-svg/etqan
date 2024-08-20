@@ -1,7 +1,24 @@
+buildscript {
+    ext {
+        // Define versions for Gradle and AGP
+        gradle_version = '8.0.2'
+        agp_version = '7.3.0'
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:$agp_version"
+        // Add other classpath dependencies here
+    }
+}
+
 allprojects {
     repositories {
         google()
         mavenCentral()
+        // Add other repositories if needed
     }
 }
 
